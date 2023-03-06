@@ -9,3 +9,9 @@ class Home(View):
     @classmethod
     def get(cls, request):
         return render(request=request, template_name='Home.html')
+
+
+class Base(View):
+    @classmethod
+    def get(cls, request):
+        return render(request=request, template_name='Home.html')
