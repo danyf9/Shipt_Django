@@ -1,4 +1,4 @@
 .idea
 db.sqlite3
 .venv
-.__pycache__
+Shipping_Django/Shipping_Django/__pycache__/
