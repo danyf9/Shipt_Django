@@ -8,4 +8,4 @@ from django.views import View
 class Home(View):
     @classmethod
     def get(cls, request):
-        return HttpResponse('Home')
+        return render(request=request, template_name='Home.html')

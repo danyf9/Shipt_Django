@@ -122,3 +122,13 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# USE_L10N = False
+# DATE_FORMAT = 'd ,F, Y'
+#
+# # SESSION_COOKIE_AGE = 60
+# # in seconds
+#
+LOGIN_REDIRECT_URL = 'Home'
+# LOGOUT_REDIRECT_URL = 'Login'
+# LOGIN_URL = 'Login'

@@ -15,8 +15,7 @@ class Item(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=200)
 
-    shipment = models.ManyToManyField(to='Shipment', null=True,
-                                      related_name='Shipment_Item')
+    shipment = models.ManyToManyField(to='Shipment', related_name='Shipment_Item')
 
     class Meta:
         db_table = 'Items'
