@@ -1,6 +1,6 @@
 from time import time
-
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -14,8 +14,6 @@ class Item(models.Model):
     id = models.PositiveIntegerField(primary_key=True, default=auto_id)
     name = models.CharField(max_length=50)
     description = models.TextField(max_length=200)
-
-    shipment = models.ManyToManyField(to='Shipment', related_name='Shipment_Item')
 
     class Meta:
         db_table = 'Items'
@@ -34,3 +32,17 @@ class Shipment(models.Model):
 
     def __str__(self):
         return f'Shipment {self.id}'
+
+
+class ShipmentList(models.Model):
+
+    shipment = models.ForeignKey(to=Shipment, related_name="list_shipment",
+                                 on_delete=models.RESTRICT)
+    item = models.ForeignKey(to=Item, related_name="list_item",
+                             on_delete=models.RESTRICT)
+
+
+class ShoppingCart(models.Model):
+    id = models.IntegerField(primary_key=True)
+    user = models.ForeignKey(to=User, related_name="User_Basket", on_delete=models.RESTRICT)
+    items = models.CharField(max_length=200)
