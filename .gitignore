@@ -3,3 +3,6 @@ db.sqlite3
 .venv
 __init__.py
 *__pycache__*
+**/__pycache__/
+django_venv.py
+migrations/

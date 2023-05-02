@@ -12,11 +12,12 @@ def auto_id():
 class Item(models.Model):
 
     id = models.PositiveIntegerField(primary_key=True, default=auto_id)
-    name = models.CharField(max_length=50)
-    description = models.TextField(max_length=200)
+    name = models.CharField(max_length=50, null=False)
+    description = models.TextField(max_length=200, null=False)
+    price = models.PositiveIntegerField(null=False)
 
     class Meta:
-        db_table = 'Items'
+        db_table = 'ItemsAPI'
 
     def __str__(self):
         return f'[{self.id}] {self.name}'
@@ -26,6 +27,7 @@ class Shipment(models.Model):
 
     id = models.PositiveIntegerField(primary_key=True, default=auto_id)
     order_date = models.DateField(auto_now_add=True)
+    user = models.ForeignKey(to=User, related_name='User_shipment', on_delete=models.RESTRICT)
 
     class Meta:
         db_table = 'Shipments'
@@ -42,7 +44,15 @@ class ShipmentList(models.Model):
                              on_delete=models.RESTRICT)
 
 
-class ShoppingCart(models.Model):
-    id = models.IntegerField(primary_key=True)
-    user = models.ForeignKey(to=User, related_name="User_Basket", on_delete=models.RESTRICT)
-    items = models.CharField(max_length=200)
+class Categories(models.Model):
+
+    categories = [('TECH', 'Technology'),
+                  ('TOY', 'Toys'),
+                  ('CLOTH', 'Clothes'),
+                  ('MCLOTH', 'Men Clothes'),
+                  ('FCLOTH', 'Women Clothes'),
+                  ('GAME', 'Gaming'),
+                  ]
+
+    category = models.CharField(max_length=50, choices=categories)
+    item = models.ForeignKey(to=Item, related_name='Item_category', on_delete=models.RESTRICT)

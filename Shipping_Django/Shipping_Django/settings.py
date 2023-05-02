@@ -38,9 +38,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'Shipping_app',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -127,6 +131,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # DATE_FORMAT = 'd ,F, Y'
 # SESSION_COOKIE_AGE = 60
 # in seconds
-LOGIN_REDIRECT_URL = 'Home'
-LOGOUT_REDIRECT_URL = 'Login'
-LOGIN_URL = 'Login'
+
+REST_FRAMEWORK = {"DEFAULT_AUTHENTICATION_CLASSES": [
+    'rest_framework.authentication.TokenAuthentication',
+    ]
+}
+
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:5500",
+    "http://localhost:3000",
+]
+
+CORS_ALLOW_HEADERS = [
+    "Content-Type",
+]
