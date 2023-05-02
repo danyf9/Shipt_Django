@@ -12,11 +12,7 @@ class ItemAPI(APIView):
             try:
                 item_id = request.query_params.get('item_id')
                 if item_id is None:
-                    res = {}
-                    items = Item.objects.all()
-                    for item in items:
-                        res[item.id] = ItemSerializer(item).data
-                    return Response({"all_items": res})
+                    return Response(ItemSerializer(Item.objects.all(), many=True).data)
                 else:
                     return Response({"": ItemSerializer(Item.objects.get(pk=item_id)).data})
             except Exception as e:

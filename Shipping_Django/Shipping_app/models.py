@@ -15,6 +15,7 @@ class Item(models.Model):
     name = models.CharField(max_length=50, null=False)
     description = models.TextField(max_length=200, null=False)
     price = models.PositiveIntegerField(null=False)
+    image = models.CharField(max_length=100, null=True)
 
     class Meta:
         db_table = 'ItemsAPI'
@@ -27,7 +28,8 @@ class Shipment(models.Model):
 
     id = models.PositiveIntegerField(primary_key=True, default=auto_id)
     order_date = models.DateField(auto_now_add=True)
-    user = models.ForeignKey(to=User, related_name='User_shipment', on_delete=models.RESTRICT)
+    user = models.ForeignKey(to=User, related_name='User_shipment', on_delete=models.RESTRICT,
+                             null=True, blank=True)
 
     class Meta:
         db_table = 'Shipments'
