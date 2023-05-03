@@ -1,0 +1,49 @@
+    {% extends 'Home.html' %}
+    {% block content_block %}
+    <script>
+        function deleteItem(item, id) {
+            txt = document.getElementById('dltxt')
+            txt.innerHTML = 'are you sure you want to delete ' + item +' ?'
+            link = document.getElementById('linkdlt')
+            link.href = "{% url 'Delete' kind='Shipment' pk=12345 %}".replace(/12345/, id.toString());
+        }
+    </script>
+    <h3 style="color:white; padding-left: 30px;">Shipment List</h3><br>
+    <ol style="list-style-position: inside; padding-right: 30px;">
+    {% if shipments %}
+    {% for shipment in shipments %}
+        <li style="color: white;border-bottom:1px solid gray;">
+            {{shipment}}
+            <a type="link" data-bs-toggle="modal" data-bs-target="#exampleModal"
+            role="link" style="float: right; margin-left: 15px; margin-right: 10px;"
+            href="" onclick="deleteItem('{{shipment}}', '{{shipment.pk}}')">delete</a>
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="exampleModalLabel" style="color:black">Notice</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="color: black" id="dltxt">
+\                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                      <a type="link" class="btn btn-primary"
+                      href=""
+                      id="linkdlt"
+                      >Yes</a>
+                    </div>
+                  </div>
+                </div>
+            </div>
+            <a href="{% url 'Edit' kind='Shipment' pk=shipment.pk %}" style="float: right;">edit</a>
+            <a href="{% url 'Full' kind='Shipment' pk=shipment.pk %}" style="float: right; margin-left: 15px; margin-right: 10px;">full details</a>
+        </li>
+    {% endfor %}
+    </ol>
+    {% else %}
+    <li style="color: white;border-bottom:1px solid gray; list-style-type: none;">
+    No Shipments found
+    </li>
+    {% endif %}
+    {% endblock %}

@@ -4,5 +4,8 @@
     {% csrf_token %}
     {{form.as_p}}
     <input type="submit" value="Login">
-</form>
+</form><br/>
+{% if request.path == '/Shipt/login' %}
+<p style="color: white;">Don't have an account ? signup <a href="{% url 'Signup' %}">here</a></p>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,91 @@
+    {% block content_block %}
+    <script>
+            function deleteItem(item, id, kind, linkid, dltxt) {
+                txt = document.getElementById(dltxt.toString())
+                txt.innerHTML = 'are you sure you want to delete ' + item +' ?'
+                link = document.getElementById(linkid.toString())
+                link.href = "{% url 'Delete' kind=67890 pk=12345 %}".replace(/12345/, id.toString()).replace(/67890/, kind.toString());
+              }
+        </script>
+    <h3 style="color:white; padding-left: 30px;">Items found</h3><br>
+    <ol style="list-style-position: inside; padding-right: 30px; list-style: none;">
+    {% if items %}
+    {% for item in items %}
+        <li style="color: white;border-bottom:1px solid gray;">
+            <p style="display: inline;">{{item}}</p>
+            <a type="link" data-bs-toggle="modal" data-bs-target="#exampleModal"
+            role="link" style="float: right; margin-left: 15px; margin-right: 10px;"
+            href="" onclick="deleteItem('{{item}}', '{{item.id}}', 'Item', 'linkdltItem','dltxtitem')"
+            >delete</a>
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="exampleModalLabel" style="color:black">Notice</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="color: black" id="dltxtitem">
+\                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                      <a type="link" class="btn btn-primary"
+                      href=""
+                      id="linkdltItem"
+                      >Yes</a>
+                    </div>
+                  </div>
+                </div>
+            </div>
+            <a href="{% url 'Edit' kind='Item' pk=item.id %}" style="float: right;">edit</a>
+            <a href="{% url 'Full' kind='Item' pk=item.id %}" 
+            style="float: right; margin-left: 15px; margin-right: 10px;">full details</a>
+        </li>
+    {% endfor %}
+    {% else %}
+    <li style="color: white;border-bottom:1px solid gray;">
+        no items were found
+    </li>
+    {% endif %}
+    </ol>
+    <h3 style="color:white; padding-left: 30px;">Shipments found</h3><br>
+    <ol style="list-style-position: inside; padding-right: 30px; list-style: none;">
+    {% if shipments %}
+    {% for shipment in shipments %}
+        <li style="color: white;border-bottom:1px solid gray;">
+            {{shipment}}
+            <a type="link" data-bs-toggle="modal" data-bs-target="#exampleModal2"
+            role="link" style="float: right; margin-left: 15px; margin-right: 10px;"
+            href="" 
+            onclick="deleteItem('{{shipment}}', '{{shipment.id}}', 'Shipment', 'linkdltShipment', 'dltxtshipment')"
+            >delete</a>
+            <div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="exampleModalLabel" style="color:black">Notice</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="color: black" id="dltxtshipment">
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                      <a type="link" class="btn btn-primary"
+                      href="" onclick="location.reload()"
+                      id="linkdltShipment"
+                      >Yes</a>
+                    </div>
+                  </div>
+                </div>
+            </div>
+            <a href="{% url 'Edit' kind='Shipment' pk=shipment.id %}" style="float: right;">edit</a>
+            <a href="{% url 'Full' kind='Shipment' pk=shipment.id %}" 
+            style="float: right; margin-left: 15px; margin-right: 10px;">full details</a>
+        </li>
+    {% endfor %}
+    {% else %}
+    <li style="color: white;border-bottom:1px solid gray;">
+        no shipments were found
+    </li>
+    {% endif %}
+    </ol>
+    {% endblock %}

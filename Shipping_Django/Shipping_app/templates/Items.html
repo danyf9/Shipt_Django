@@ -1,0 +1,53 @@
+<html lang="en">
+    {% extends 'Home.html' %}
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Books</title>
+</head>
+<body>
+    {% block content_block %}
+    <script>
+        function deleteItem(item, id) {
+            txt = document.getElementById('dltxt')
+            txt.innerHTML = 'are you sure you want to delete ' + item +' ?'
+            link = document.getElementById('linkdlt')
+            link.href = "{% url 'Delete' kind='Item' pk=12345 %}".replace(/12345/, id.toString());
+        }
+    </script>
+    <h3 style="color:white; padding-left: 30px;">Item List</h3><br>
+    <ol style="list-style-position: inside; padding-right: 30px;">
+    {% for item in items %}
+        <li style="color: white;border-bottom:1px solid gray;">
+            {{item}}
+            <a type="link" data-bs-toggle="modal" data-bs-target="#exampleModal"
+            role="link" style="float: right; margin-left: 15px; margin-right: 10px;"
+            href="" onclick="deleteItem('{{item}}', '{{item.pk}}')">delete</a>
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="exampleModalLabel" style="color:black">Notice</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="color: black" id="dltxt">
+\                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                      <a type="link" class="btn btn-primary"
+                      href=""
+                      id="linkdlt"
+                      >Yes</a>
+                    </div>
+                  </div>
+                </div>
+            </div>
+            <a href="{% url 'Edit' kind='Item' pk=item.pk %}" style="float: right;">edit</a>
+            <a href="{% url 'Full' kind='Item' pk=item.pk %}" style="float: right; margin-left: 15px; margin-right: 10px;">full details</a>
+        </li>
+    {% endfor %}
+    </ol>
+    {% endblock %}
+</body>
+</html>

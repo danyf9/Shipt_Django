@@ -1,0 +1,13 @@
+    {% extends 'Home.html' %}
+    {% load static %}
+    {% block content_block %}
+    <img src="{% static 'test.jpg' %}" alt="error" 
+    style="float: right; margin-right: 30px; height: 400px;">
+    <h3 style="color: white; margin-left: 20px;">Full details</h3>
+    <br>
+    <div style="margin-left: 30px;">
+    {% for key,value in obj_dict.items %}
+    <p style="color:white">{{key}} : {{value}}</p>
+    {% endfor %}
+    </div>
+    {% endblock %}

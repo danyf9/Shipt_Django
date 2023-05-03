@@ -1,0 +1,30 @@
+{% extends 'Home.html' %}
+    {% block content_block %}
+    <script>
+        window.onload = () => {
+      const myModal = new bootstrap.Modal('#onload');
+      myModal.show();
+    }
+    </script>
+    <body>
+      <div class="modal fade" id="onload" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"> <!-- Add this line to your code -->
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">{{status}}</h5>
+                </div>
+                <div class="modal-body" style="color:black">
+                    {{msg}}
+                </div>
+                <div class="modal-footer">
+                    {% if kind == 'User' %}
+                    <a type="link" class="btn btn-primary" href="{% url direct %}">Ok</a>
+                    {% else %}
+                    <a type="link" class="btn btn-primary" href="{% url direct kind=kind %}">Ok</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    </body>
+    {% endblock %}

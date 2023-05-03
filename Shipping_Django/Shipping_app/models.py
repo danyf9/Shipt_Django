@@ -15,7 +15,6 @@ class Item(models.Model):
     name = models.CharField(max_length=50, null=False)
     description = models.TextField(max_length=200, null=False)
     price = models.PositiveIntegerField(null=False)
-    image = models.CharField(max_length=100, null=True)
 
     class Meta:
         db_table = 'ItemsAPI'
