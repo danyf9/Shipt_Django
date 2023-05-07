@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Item, Shipment
+from .models import Item, Shipment, Categories
 
 
 class Search(forms.Form):
@@ -51,4 +51,11 @@ class FullSignup(UserCreationForm):
         exclude = ['last_login', 'is_superuser', 'groups',
                    'user_permissions', 'password', 'is_staff',
                    'is_active', 'date_joined']
+        fields = '__all__'
+
+
+class ItemCategoryForm(forms.ModelForm):
+
+    class Meta:
+        model = Categories
         fields = '__all__'

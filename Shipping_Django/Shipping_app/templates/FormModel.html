@@ -1,6 +1,6 @@
-{% extends 'Home.html' %}
+{% extends 'Base.html' %}
     {% block content_block %}
-    <h3 style="color: white; margin-left: 20px;">Add {{kind}}</h3>
+    <h3 style="color: white; margin-left: 20px;">{{action}} {{kind}}</h3>
         <form action="" method="post" style="color: white; margin-left: 50px;">
             {% csrf_token %}
             {{form.as_p}}

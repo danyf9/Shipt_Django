@@ -1,29 +1,22 @@
-<html lang="en">
     {% extends 'Home.html' %}
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Books</title>
-</head>
-<body>
     {% block content_block %}
     <script>
         function deleteItem(item, id) {
             txt = document.getElementById('dltxt')
             txt.innerHTML = 'are you sure you want to delete ' + item +' ?'
             link = document.getElementById('linkdlt')
-            link.href = "{% url 'Delete' kind='Item' pk=12345 %}".replace(/12345/, id.toString());
+            link.href = "{% url 'Delete' kind=kind pk=12345 %}".replace(/12345/, id.toString());
         }
     </script>
-    <h3 style="color:white; padding-left: 30px;">Item List</h3><br>
+    <h3 style="color:white; padding-left: 30px;">Shipment List</h3><br>
     <ol style="list-style-position: inside; padding-right: 30px;">
-    {% for item in items %}
+    {% if obj_list %}
+    {% for obj in obj_list %}
         <li style="color: white;border-bottom:1px solid gray;">
-            {{item}}
+            {{obj}}
             <a type="link" data-bs-toggle="modal" data-bs-target="#exampleModal"
             role="link" style="float: right; margin-left: 15px; margin-right: 10px;"
-            href="" onclick="deleteItem('{{item}}', '{{item.pk}}')">delete</a>
+            href="" onclick="deleteItem('{{obj}}', '{{obj.pk}}')">delete</a>
             <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                   <div class="modal-content">
@@ -43,11 +36,14 @@
                   </div>
                 </div>
             </div>
-            <a href="{% url 'Edit' kind='Item' pk=item.pk %}" style="float: right;">edit</a>
-            <a href="{% url 'Full' kind='Item' pk=item.pk %}" style="float: right; margin-left: 15px; margin-right: 10px;">full details</a>
+            <a href="{% url 'Edit' kind=kind pk=obj.pk %}" style="float: right;">edit</a>
+            <a href="{% url 'Full' kind=kind pk=obj.pk %}" style="float: right; margin-left: 15px; margin-right: 10px;">full details</a>
         </li>
     {% endfor %}
     </ol>
+    {% else %}
+    <li style="color: white;border-bottom:1px solid gray; list-style-type: none;">
+    No Shipments found
+    </li>
+    {% endif %}
     {% endblock %}
-</body>
-</html>

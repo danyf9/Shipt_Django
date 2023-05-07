@@ -1,10 +1,11 @@
 from django.contrib.auth import login
+from django.contrib.auth.models import User
 from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.views import View
 
-from .models import Item, Shipment
-from .forms import Search, AddItem, EditItem, AddShipment, EditShipment, FullSignup
+from .models import Item, Shipment, Categories
+from .forms import Search, AddItem, EditItem, AddShipment, EditShipment, FullSignup, ItemCategoryForm
 
 
 # Create your views here.
@@ -50,12 +51,19 @@ class List(View):
 
     @classmethod
     def get(cls, request, kind):
+        obj_lst = ''
         if kind == 'Item':
-            return render(request=request, template_name='Items.html',
-                          context={'items': Item.objects.all()})
-        if kind == 'Shipment':
-            return render(request=request, template_name='Shipments.html',
-                          context={'shipments': Shipment.objects.all()})
+            obj_lst = Item.objects.all()
+
+        elif kind == 'Shipment':
+            obj_lst = Shipment.objects.all()
+
+        elif kind == 'Category':
+            obj_lst = Categories.objects.all()
+
+        return render(request=request, template_name='List.html',
+                      context={'obj_list': obj_lst,
+                               'kind': kind})
 
     @classmethod
     def post(cls, request, kind):
@@ -68,9 +76,15 @@ class Add(View):
 
     @classmethod
     def get(cls, request, kind):
+        form = ''
         if kind == 'Item':
-            return render(request=request, template_name='FormModel.html',
-                          context={'form': AddItem})
+            form = AddItem
+        elif kind == 'Shipment':
+            form = AddShipment
+        elif kind == 'Category':
+            form = ItemCategoryForm
+        return render(request=request, template_name='FormModel.html',
+                      context={'form': form, 'kind': kind, 'action': 'Add'})
 
     @classmethod
     def post(cls, request, kind):
@@ -79,7 +93,8 @@ class Add(View):
             form = AddItem(data=request.POST)
         elif kind == 'Shipment':
             form = AddShipment(data=request.POST)
-
+        elif kind == 'Category':
+            form = ItemCategoryForm(data=request.POST)
         if form.is_valid():
             try:
                 form.save()
@@ -111,6 +126,10 @@ class Full(View):
             obj = Shipment.objects.get(id=pk)
             obj_dict = {'ID': obj.pk, 'Date': obj.order_date, 'User': obj.user.username}
 
+        elif kind == 'Category':
+            obj = Categories.objects.get(pk=pk)
+            obj_dict = {'ID': obj.pk, 'Category': obj.category, 'Item': obj.item}
+
         return render(request=request, template_name='Full_details.html',
                       context={'obj_dict': obj_dict})
 
@@ -119,26 +138,25 @@ class Edit(View):
 
     @classmethod
     def get(cls, request, kind, pk):
+        form = ''
         if kind == 'Item':
-            return render(request=request, template_name='FormModel.html',
-                          context={'form': EditItem(instance=Item.objects.get(id=pk)),
-                                   'pk': pk, 'direct': 'Items', 'kind': kind})
+            form = EditItem(instance=Item.objects.get(id=pk))
         elif kind == 'User':
-            return render(request=request, template_name='FormModel.html',
-                          context={'form': EditShipment(instance=Item.objects.get(id=pk)),
-                                   'pk': pk, 'direct': 'Shipments', 'kind': kind})
-        elif kind == 'User':
-            user = request.user
-            return render(request=request, template_name='FormModel.html',
-                          context={'form': FullSignup(instance=user)})
+            form = FullSignup(instance=User.objects.get(id=pk))
+        elif kind == 'Category':
+            form = ItemCategoryForm(instance=Categories)
+        return render(request=request, template_name='FormModel.html',
+                      context={'form': form, 'kind': kind, 'pk': pk, 'action': 'Edit'})
 
     @classmethod
     def post(cls, request, kind, pk):
         form = ''
         if kind == 'Item':
-            form = EditItem(request.POST, instance=Item.objects.get(id=pk))
+            form = EditItem(data=request.POST, instance=Item.objects.get(id=pk))
         elif kind == 'Shipment':
-            form = EditShipment(request.POST, instance=Shipment.objects.get(id=pk))
+            form = EditShipment(data=request.POST, instance=Shipment.objects.get(id=pk))
+        elif kind == 'Category':
+            form = ItemCategoryForm(data=request.POST, instance=Categories.objects.get(pk=pk))
         elif kind == 'User':
             form = FullSignup(data=request.POST, instance=request.user)
         if form.is_valid():
@@ -155,7 +173,7 @@ class Edit(View):
             status = 'Error'
         if kind == 'User':
             login(request=request, user=form.instance)
-            return render(request=request, template_name='FormModel.html',
+            return render(request=request, template_name='Modal.html',
                           context={'direct': 'Home', 'kind': kind, 'msg': msg,
                                    'status': status})
 
@@ -171,12 +189,10 @@ class Delete(View):
         obj, re = '', ''
         if kind == 'Item':
             obj = Item.objects.get(id=pk)
-            re = 'Item'
         elif kind == 'Shipment':
             obj = Shipment.objects.get(customer_id=pk)
-            re = 'Shipment'
         obj.delete()
-        return redirect('List', kind=re)
+        return redirect('List', kind=kind)
 
 
 class SignupView(View):
