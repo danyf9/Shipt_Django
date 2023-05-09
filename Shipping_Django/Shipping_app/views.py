@@ -50,7 +50,7 @@ class SearchView(View):
 class List(View):
 
     @classmethod
-    def get(cls, request, kind):
+    def get(cls, request, kind, category=None):
         obj_lst = ''
         if kind == 'Item':
             obj_lst = Item.objects.all()
@@ -59,8 +59,20 @@ class List(View):
             obj_lst = Shipment.objects.all()
 
         elif kind == 'Category':
-            obj_lst = Categories.objects.all()
+            if category is None:
+                obj_lst = Categories.categories
+                return render(request=request, template_name='CategoryList.html',
+                              context={'obj_list': obj_lst,
+                                       'kind': kind})
+            else:
+                obj_lst = {}
+                for c in list(zip(*Categories.categories))[0]:
+                    obj_lst.update(
+                        {c: [obj.item for obj in Categories.objects.filter(category=c)]})
 
+                return render(request=request, template_name='List.html',
+                              context={'obj_list': obj_lst[category],
+                                       'kind': 'Item'})
         return render(request=request, template_name='List.html',
                       context={'obj_list': obj_lst,
                                'kind': kind})
@@ -188,9 +200,11 @@ class Delete(View):
     def get(cls, request, kind, pk):
         obj, re = '', ''
         if kind == 'Item':
-            obj = Item.objects.get(id=pk)
+            obj = Item.objects.get(pk=pk)
         elif kind == 'Shipment':
-            obj = Shipment.objects.get(customer_id=pk)
+            obj = Shipment.objects.get(pk=pk)
+        elif kind == 'Category':
+            obj = Categories.objects.get(pk=pk)
         obj.delete()
         return redirect('List', kind=kind)
 
