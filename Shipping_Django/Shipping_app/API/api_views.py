@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from .serializers import ItemSerializer
-from ..models import Item
+from ..models import Item, Categories
 
 
 class ItemAPI(APIView):
@@ -36,3 +36,17 @@ class ItemAPI(APIView):
         else:
             return Response(f"Cannot use the '{action}' action with the current method."
                             f" try replacing the '/{action}' with '/add'")
+
+
+class ItemPage(APIView):
+    @classmethod
+    def get(cls, request, page_num, page_size, category):
+        current_place = page_num * page_size
+        items = [category.item for category in Categories.objects.filter(category=category)]
+        return Response(
+            {
+                'lst':
+                    ItemSerializer(items[current_place: current_place + page_size], many=True).data,
+                'size': len(Item.objects.all())
+            }
+        )

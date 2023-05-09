@@ -8,7 +8,7 @@
             link.href = "{% url 'Delete' kind=kind pk=12345 %}".replace(/12345/, id.toString());
         }
     </script>
-    <h3 style="color:white; padding-left: 30px;">Shipment List</h3><br>
+    <h3 style="color:white; padding-left: 30px;">{{kind}} List</h3><br>
     <ol style="list-style-position: inside; padding-right: 30px;">
     {% if obj_list %}
     {% for obj in obj_list %}
