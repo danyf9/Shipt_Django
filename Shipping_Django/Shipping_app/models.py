@@ -56,7 +56,7 @@ class Categories(models.Model):
                   ]
 
     category = models.CharField(max_length=50, choices=categories)
-    item = models.ForeignKey(to=Item, related_name='Item_category', on_delete=models.RESTRICT)
+    item = models.ForeignKey(to=Item, related_name='Item_category', on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'Categories'

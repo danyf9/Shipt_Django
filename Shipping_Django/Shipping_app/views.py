@@ -131,8 +131,12 @@ class Full(View):
         obj_dict = {}
         if kind == 'Item':
             obj = Item.objects.get(id=pk)
+            l1 = []
+            for q in [c.category for c in obj.Item_category.all()]:
+                l1.append({c[0]: c[1] for c in Categories.categories}[q])
             obj_dict = {'ID': obj.pk, 'Name': obj.name, 'Description': obj.description,
-                        'price': obj.price}
+                        'Price': obj.price,
+                        'Categories': str(l1)[1:-1].replace("'", "")}
 
         elif kind == 'Shipment':
             obj = Shipment.objects.get(id=pk)
