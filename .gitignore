@@ -6,4 +6,4 @@ db.sqlite3
 **__pycache__/**
 django_venv.py
 migrations/
-**/static/**
+**/static/data

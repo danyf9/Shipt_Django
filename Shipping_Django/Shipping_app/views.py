@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect
 from django.views import View
 
 from .models import Item, Shipment, Categories
-from .forms import Search, AddItem, EditItem, AddShipment, EditShipment, FullSignup, ItemCategoryForm
+from .forms import Search, AddItem, EditItem, AddShipment, EditShipment, FullSignup, ItemCategoryForm, CategoryForm
 
 
 # Create your views here.
@@ -24,6 +24,15 @@ def search_all(var):
         Q(order_date__contains=var)
     )
     return {'items': item_list, 'shipments': shipment_list}
+
+
+def get_items(category):
+    obj_lst = {}
+    for c in list(zip(*Categories.categories))[0]:
+        if c == {l[1]: l[0] for l in Categories.categories}[category]:
+            obj_lst.update(
+                {c: [obj.item for obj in Categories.objects.filter(category=c)]})
+    return obj_lst[{l[1]: l[0] for l in Categories.categories}[category]]
 
 
 class Home(View):
@@ -60,19 +69,10 @@ class List(View):
 
         elif kind == 'Category':
             if category is None:
-                obj_lst = Categories.categories
-                return render(request=request, template_name='CategoryList.html',
-                              context={'obj_list': obj_lst,
-                                       'kind': kind})
+                obj_lst = [o for o in Categories.categories]
             else:
-                obj_lst = {}
-                for c in list(zip(*Categories.categories))[0]:
-                    obj_lst.update(
-                        {c: [obj.item for obj in Categories.objects.filter(category=c)]})
-
-                return render(request=request, template_name='List.html',
-                              context={'obj_list': obj_lst[category],
-                                       'kind': 'Item'})
+                obj_lst = get_items(category)
+                kind = 'Item'
         return render(request=request, template_name='List.html',
                       context={'obj_list': obj_lst,
                                'kind': kind})
@@ -89,14 +89,16 @@ class Add(View):
     @classmethod
     def get(cls, request, kind):
         form = ''
+
         if kind == 'Item':
             form = AddItem
         elif kind == 'Shipment':
             form = AddShipment
         elif kind == 'Category':
             form = ItemCategoryForm
+
         return render(request=request, template_name='FormModel.html',
-                      context={'form': form, 'kind': kind, 'action': 'Add'})
+                      context={'kind': kind, 'action': 'Add', 'form': form})
 
     @classmethod
     def post(cls, request, kind):
@@ -107,11 +109,17 @@ class Add(View):
             form = AddShipment(data=request.POST)
         elif kind == 'Category':
             form = ItemCategoryForm(data=request.POST)
+
         if form.is_valid():
             try:
                 form.save()
                 msg = f'{kind} added successfully'
                 status = 'Success'
+                if kind == 'Item':
+                    ItemCategoryForm(instance=Categories(
+                        item=Item.objects.get(pk=form.instance.pk),
+                        category=form.cleaned_data['category']
+                    )).save()
             except Exception as e:
                 msg = f'Error: {e}'
                 status = 'Error'
@@ -131,12 +139,14 @@ class Full(View):
         obj_dict = {}
         if kind == 'Item':
             obj = Item.objects.get(id=pk)
-            l1 = []
+            l1, l2 = [], []
             for q in [c.category for c in obj.Item_category.all()]:
-                l1.append({c[0]: c[1] for c in Categories.categories}[q])
+                l1.append({'category': {c[0]: c[1] for c in Categories.categories}[q],
+                           'pk': Categories.objects.get(item=obj, category=q).pk})
+
             obj_dict = {'ID': obj.pk, 'Name': obj.name, 'Description': obj.description,
                         'Price': obj.price,
-                        'Categories': str(l1)[1:-1].replace("'", "")}
+                        'Categories': l1}
 
         elif kind == 'Shipment':
             obj = Shipment.objects.get(id=pk)

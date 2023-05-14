@@ -10,6 +10,7 @@
     </script>
     <h3 style="color:white; padding-left: 30px;">{{kind}} List</h3><br>
     <ol style="list-style-position: inside; padding-right: 30px;">
+    {%  if kind != 'Category' %}
     {% if obj_list %}
     {% for obj in obj_list %}
         <li style="color: white;border-bottom:1px solid gray;">
@@ -45,5 +46,19 @@
     <li style="color: white;border-bottom:1px solid gray; list-style-type: none;">
     No {{kind}}s found
     </li>
+    {% endif %}
+    {% else %}
+    {% if obj_list %}
+    {% for obj in obj_list %}
+        <li style="color: white;border-bottom:1px solid gray;">
+            <a href="{% url 'CategoryList' kind=kind category=obj.1 %}">{{obj.1}}</a>
+        </li>
+    {% endfor %}
+    </ol>
+    {% else %}
+    <li style="color: white;border-bottom:1px solid gray; list-style-type: none;">
+    No {{kind}}s found
+    </li>
+    {% endif %}
     {% endif %}
     {% endblock %}

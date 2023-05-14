@@ -7,7 +7,15 @@
     <br>
     <div style="margin-left: 30px;">
     {% for key,value in obj_dict.items %}
+    {% if key == 'Categories' %}
+    <p style="color:white; display: inline;">Categories:</p>
+    {% for item in obj_dict.Categories %}
+    <a href="{% url 'CategoryList' kind='Category' category=item %}">{{item.category}}</a>
+    <a href="{% url 'Delete' kind='Category' pk=item.pk%}">(remove)</a>
+    {% endfor %}
+    {% else %}
     <p style="color:white">{{key}} : {{value}}</p>
+    {% endif %}
     {% endfor %}
     </div>
     {% endblock %}

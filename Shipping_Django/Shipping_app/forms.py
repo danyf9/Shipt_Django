@@ -10,6 +10,9 @@ class Search(forms.Form):
 
 
 class AddItem(forms.ModelForm):
+
+    category = forms.ChoiceField(choices=Categories.categories)
+
     class Meta:
         model = Item
         fields = '__all__'
@@ -55,6 +58,16 @@ class FullSignup(UserCreationForm):
 
 
 class ItemCategoryForm(forms.ModelForm):
+
+    class Meta:
+        model = Categories
+        fields = '__all__'
+
+
+class CategoryForm(forms.ModelForm):
+
+    item = forms.IntegerField(widget=forms.HiddenInput(), required=False, initial=Item.objects.first().pk, min_value=0,
+                              disabled=True)
 
     class Meta:
         model = Categories
