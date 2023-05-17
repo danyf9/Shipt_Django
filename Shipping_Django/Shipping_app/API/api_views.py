@@ -65,7 +65,8 @@ class ItemPage(APIView):
         current_place = page_num * page_size
         end_place = current_place + page_size
         if category is not None and category != 'All':
-            items = [category.item for category in Categories.objects.filter(category=category)]
+            items = [category.item for category in Categories.objects.filter(
+                category={c[1]: c[0] for c in Categories.categories}[category])]
         else:
             items = Item.objects.filter()[current_place: end_place]
         if end_place > Item.objects.count():
@@ -76,6 +77,6 @@ class ItemPage(APIView):
             {
                 'lst': items,
                 'size': len(items),
-                'categories': [c[0] for c in Categories.categories]
+                'categories': [c[1] for c in Categories.categories]
             }
         )
