@@ -17,7 +17,7 @@ class Item(models.Model):
     price = models.PositiveIntegerField(null=False)
 
     class Meta:
-        db_table = 'ItemsAPI'
+        db_table = 'Items'
 
     def __str__(self):
         return f'[{self.id}] {self.name}'

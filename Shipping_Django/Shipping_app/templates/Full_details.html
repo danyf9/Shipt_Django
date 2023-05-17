@@ -10,7 +10,7 @@
     {% if key == 'Categories' %}
     <p style="color:white; display: inline;">Categories:</p>
     {% for item in obj_dict.Categories %}
-    <a href="{% url 'CategoryList' kind='Category' category=item %}">{{item.category}}</a>
+    <a href="{% url 'CategoryList' kind='Category' category=item.category %}">{{item.category}}</a>
     <a href="{% url 'Delete' kind='Category' pk=item.pk%}">(remove)</a>
     {% endfor %}
     {% else %}

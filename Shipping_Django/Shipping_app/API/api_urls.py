@@ -9,5 +9,6 @@ urlpatterns = [
     path("items/<str:action>", api_views.ItemAPI.as_view()),
     path("item-page/<int:page_num>/<int:page_size>", api_views.ItemPage.as_view()),
     path("item-page/<int:page_num>/<int:page_size>/<str:category>", api_views.ItemPage.as_view()),
-    path("login", obtain_auth_token)
+    path("login", obtain_auth_token),
+    path("signup", api_views.UserCreation.as_view())
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

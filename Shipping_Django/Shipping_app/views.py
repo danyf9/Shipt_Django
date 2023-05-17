@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect
 from django.views import View
 
 from .models import Item, Shipment, Categories
-from .forms import Search, AddItem, EditItem, AddShipment, EditShipment, FullSignup, ItemCategoryForm, CategoryForm
+from .forms import Search, AddItem, EditItem, AddShipment, EditShipment, FullSignup, ItemCategoryForm
 
 
 # Create your views here.
@@ -29,10 +29,10 @@ def search_all(var):
 def get_items(category):
     obj_lst = {}
     for c in list(zip(*Categories.categories))[0]:
-        if c == {l[1]: l[0] for l in Categories.categories}[category]:
+        if c == {lst[1]: lst[0] for lst in Categories.categories}[category]:
             obj_lst.update(
                 {c: [obj.item for obj in Categories.objects.filter(category=c)]})
-    return obj_lst[{l[1]: l[0] for l in Categories.categories}[category]]
+    return obj_lst[{lst[1]: lst[0] for lst in Categories.categories}[category]]
 
 
 class Home(View):
