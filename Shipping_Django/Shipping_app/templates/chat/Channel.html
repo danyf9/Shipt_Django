@@ -1,0 +1,54 @@
+{% extends 'Home.html' %}
+{% block content_block %}
+    <script>
+      function connect() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const room = urlParams.get('room')
+        const url = `ws://${window.location.host}/ws?room=${room}&user={{user}}`;
+        document.querySelector('#room').innerHTML = `Welcome to ${room}`
+
+        socketClient = new WebSocket(url);
+
+        socketClient.onmessage = async (e) => {
+          data = await JSON.parse(e.data);
+          rootElem = document.getElementById("root");
+          newElem = document.createElement("p");
+          newElem.innerText = data.message;
+        
+          if (data.event_type == "info") {
+            newElem.style.backgroundColor = "yellow";
+          }
+
+          rootElem.appendChild(newElem);
+      }
+        document.getElementById("input")
+        .addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+        event.preventDefault();
+        document.getElementById("btn").click();
+        }
+        return;
+    })}
+
+      function send(data) {
+        socketClient.send(JSON.stringify({ message: data }));
+        document.querySelector('#input').value = ''
+      }
+
+    var input = document.getElementById("input");
+    input.addEventListener("keypress", function(event) {
+    if (event.key === "Enter") {
+    event.preventDefault();
+    document.getElementById("btn").click();
+  }
+    })
+    </script>
+  </head>
+  <body onload="connect()">
+    <h3 id="room" style="color: white;"></h3>
+
+    <input id="input"/><br/>
+    <button onclick="send(document.querySelector('#input').value)" id="btn">Send</button>
+    <div id="root" style="color: white;"></div>
+  </body>
+{% endblock %}

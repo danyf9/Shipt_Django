@@ -1,8 +1,10 @@
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.views import View
+from channels.layers import get_channel_layer
 
 from .models import Item, Shipment, Categories
 from .forms import Search, AddItem, EditItem, AddShipment, EditShipment, FullSignup, ItemCategoryForm
@@ -73,6 +75,9 @@ class List(View):
             else:
                 obj_lst = get_items(category)
                 kind = 'Item'
+
+        elif kind == 'Room':
+            obj_lst = [k.split('_')[1] for k in list(get_channel_layer().groups.keys())]
         return render(request=request, template_name='List.html',
                       context={'obj_list': obj_lst,
                                'kind': kind})
@@ -248,3 +253,9 @@ class SignupView(View):
         else:
             return render(request=request, template_name='registration/Login.html',
                           context={'form': user, 'action': 'Signup', 'user': user.instance.username})
+
+
+class WS(View):
+    @classmethod
+    def get(cls, request):
+        return render(request=request, template_name='chat/Channel.html')

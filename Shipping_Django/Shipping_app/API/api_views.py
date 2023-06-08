@@ -1,9 +1,12 @@
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import ItemSerializer
 from ..models import Item, Categories
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
+from django.utils.decorators import method_decorator
 
 
 class UserCreation(APIView):
@@ -34,7 +37,7 @@ class ItemAPI(APIView):
                 if item_id is None:
                     return Response(ItemSerializer(Item.objects.all(), many=True).data)
                 else:
-                    return Response({"": ItemSerializer(Item.objects.get(pk=item_id)).data})
+                    return Response(ItemSerializer(Item.objects.get(pk=item_id)).data)
             except Exception as e:
                 return Response(f"Error: {e}")
         else:
@@ -58,6 +61,7 @@ class ItemAPI(APIView):
                             f" try replacing the '/{action}' with '/add'")
 
 
+@method_decorator(cache_page(60*15), name='dispatch')
 class ItemPage(APIView):
     @classmethod
     def get(cls, request, page_num, page_size, category=None):
@@ -66,17 +70,30 @@ class ItemPage(APIView):
         end_place = current_place + page_size
         if category is not None and category != 'All':
             items = [category.item for category in Categories.objects.filter(
-                category={c[1]: c[0] for c in Categories.categories}[category])]
+                category=cache.get('category_CAT_dict')[category])]
         else:
             items = Item.objects.filter()[current_place: end_place]
+
         if end_place > Item.objects.count():
             items = ItemSerializer(items, many=True).data
         else:
             items = ItemSerializer(items[current_place: Item.objects.count()], many=True).data
+
         return Response(
             {
                 'lst': items,
                 'size': len(items),
-                'categories': [c[1] for c in Categories.categories]
+                'categories': cache.get('categories')
             }
         )
+
+
+class ResetCache(APIView):
+    @classmethod
+    def get(cls, request):
+        try:
+            cache.set('category_CAT_dict', {c[1]: c[0] for c in Categories.categories}, timeout=None)
+            cache.set('categories', [c[1] for c in Categories.categories], timeout=None)
+            return Response('Cache reset complete')
+        except Exception as e:
+            print(e)

@@ -7,11 +7,12 @@
             link = document.getElementById('linkdlt')
             link.href = "{% url 'Delete' kind=kind pk=12345 %}".replace(/12345/, id.toString());
         }
-    </script>
+
+    </script> 
     <h3 style="color:white; padding-left: 30px;">{{kind}} List</h3><br>
     <ol style="list-style-position: inside; padding-right: 30px;">
-    {%  if kind != 'Category' %}
     {% if obj_list %}
+    {%  if kind != 'Category' and kind != 'Room'%}
     {% for obj in obj_list %}
         <li style="color: white;border-bottom:1px solid gray;">
             {{obj}}
@@ -41,24 +42,26 @@
             <a href="{% url 'Full' kind=kind pk=obj.pk %}" style="float: right; margin-left: 15px; margin-right: 10px;">full details</a>
         </li>
     {% endfor %}
-    </ol>
     {% else %}
-    <li style="color: white;border-bottom:1px solid gray; list-style-type: none;">
-    No {{kind}}s found
-    </li>
-    {% endif %}
-    {% else %}
-    {% if obj_list %}
+    {% if kind == 'Category' %}
     {% for obj in obj_list %}
         <li style="color: white;border-bottom:1px solid gray;">
             <a href="{% url 'CategoryList' kind=kind category=obj.1 %}">{{obj.1}}</a>
         </li>
     {% endfor %}
-    </ol>
+    {% endif %}
+    {% if kind == 'Room' %}
+    {% for obj in obj_list %}
+    <li style="color: white;border-bottom:1px solid gray">
+      <a href="{% url 'WS' %}?room={{obj}}">{{obj}}</a>      
+    </li>
+    {% endfor %}
+    {% endif %}
+    {% endif %}
     {% else %}
     <li style="color: white;border-bottom:1px solid gray; list-style-type: none;">
-    No {{kind}}s found
-    </li>
+      No {{kind}}s found
+      </li>
     {% endif %}
-    {% endif %}
+  </ol>
     {% endblock %}

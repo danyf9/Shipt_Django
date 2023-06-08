@@ -1,7 +1,12 @@
     {% extends 'Home.html' %}
     {% load static %}
     {% block content_block %}
-    <img src="{% static 'test.jpg' %}" alt="error" 
+    <script>
+        window.onload = (e)=>{
+            document.getElementById('img').src = "{% static 'data/12345' %}".replace('12345', '{{obj_dict.ID}}.png')
+        }
+    </script>
+    <img src="" alt='' id="img"
     style="float: right; margin-right: 30px; height: 400px;">
     <h3 style="color: white; margin-left: 20px;">Full details</h3>
     <br>

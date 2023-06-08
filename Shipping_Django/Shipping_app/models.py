@@ -15,6 +15,7 @@ class Item(models.Model):
     name = models.CharField(max_length=50, null=False)
     description = models.TextField(max_length=200, null=False)
     price = models.PositiveIntegerField(null=False)
+    # img = models.FileField(upload_to=)
 
     class Meta:
         db_table = 'Items'
