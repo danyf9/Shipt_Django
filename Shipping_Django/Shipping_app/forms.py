@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Item, Shipment, Categories
+from .models import Item, Shipment, Categories, Image
 
 
 class Search(forms.Form):
@@ -62,3 +62,9 @@ class ItemCategoryForm(forms.ModelForm):
     class Meta:
         model = Categories
         fields = '__all__'
+
+
+class ImageForm(forms.ModelForm):
+    class Meta:
+        model = Image
+        fields = ['image']

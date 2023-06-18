@@ -6,8 +6,8 @@ from django.shortcuts import render, redirect
 from django.views import View
 from channels.layers import get_channel_layer
 
-from .models import Item, Shipment, Categories
-from .forms import Search, AddItem, EditItem, AddShipment, EditShipment, FullSignup, ItemCategoryForm
+from .models import Item, Shipment, Categories, Image
+from .forms import Search, AddItem, EditItem, AddShipment, EditShipment, FullSignup, ItemCategoryForm, ImageForm
 
 
 # Create your views here.
@@ -93,17 +93,17 @@ class Add(View):
 
     @classmethod
     def get(cls, request, kind):
-        form = ''
+        forms = ''
 
         if kind == 'Item':
-            form = AddItem
+            forms = [AddItem, ImageForm]
         elif kind == 'Shipment':
-            form = AddShipment
+            forms = [AddShipment]
         elif kind == 'Category':
-            form = ItemCategoryForm
+            forms = [ItemCategoryForm]
 
         return render(request=request, template_name='FormModel.html',
-                      context={'kind': kind, 'action': 'Add', 'form': form})
+                      context={'kind': kind, 'action': 'Add', 'forms': forms})
 
     @classmethod
     def post(cls, request, kind):
@@ -121,10 +121,14 @@ class Add(View):
                 msg = f'{kind} added successfully'
                 status = 'Success'
                 if kind == 'Item':
-                    ItemCategoryForm(instance=Categories(
+                    Categories(
                         item=Item.objects.get(pk=form.instance.pk),
                         category=form.cleaned_data['category']
-                    )).save()
+                    ).save()
+                    Image(
+                        item=Item.objects.get(pk=form.instance.pk),
+                        image=request.FILES['image']
+                    ).save()
             except Exception as e:
                 msg = f'Error: {e}'
                 status = 'Error'

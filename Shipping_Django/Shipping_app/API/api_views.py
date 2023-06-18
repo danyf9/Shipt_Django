@@ -3,10 +3,11 @@ from django.views.decorators.cache import cache_page
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import ItemSerializer
-from ..models import Item, Categories
+from ..models import Item, Categories, Shipment, ShipmentList
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from django.utils.decorators import method_decorator
+import json
 
 
 class UserCreation(APIView):
@@ -61,7 +62,7 @@ class ItemAPI(APIView):
                             f" try replacing the '/{action}' with '/add'")
 
 
-@method_decorator(cache_page(60*15), name='dispatch')
+@method_decorator(cache_page(60 * 15), name='dispatch')
 class ItemPage(APIView):
     @classmethod
     def get(cls, request, page_num, page_size, category=None):
@@ -97,3 +98,14 @@ class ResetCache(APIView):
             return Response('Cache reset complete')
         except Exception as e:
             print(e)
+
+
+class ShipmentAPI(APIView):
+    @classmethod
+    def post(cls, request):
+        data = request.data['data']
+        shipment = Shipment(user=Token.objects.get(key=request.data['user']).user)
+        shipment.save()
+        for iid in [item['id'] for item in data]:
+            ShipmentList(shipment=shipment, item=Item.objects.get(id=iid)).save()
+        return Response('ok')

@@ -62,3 +62,8 @@ class Categories(models.Model):
     class Meta:
         db_table = 'Categories'
         unique_together = ('category', 'item')
+
+
+class Image(models.Model):
+    item = models.ForeignKey(to=Item, related_name='Item_image', on_delete=models.CASCADE)
+    image = models.FileField(null=False, upload_to='items')
