@@ -221,9 +221,10 @@ class Delete(View):
 
     @classmethod
     def get(cls, request, kind, pk):
-        obj, re = '', ''
+        obj = ''
         if kind == 'Item':
             obj = Item.objects.get(pk=pk)
+            obj.Item_image.get().image.delete(save=False)
         elif kind == 'Shipment':
             obj = Shipment.objects.get(pk=pk)
         elif kind == 'Category':
