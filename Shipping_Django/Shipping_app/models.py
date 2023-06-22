@@ -67,3 +67,6 @@ class Categories(models.Model):
 class Image(models.Model):
     item = models.ForeignKey(to=Item, related_name='Item_image', on_delete=models.CASCADE)
     image = models.FileField(null=False, upload_to='items')
+
+    def __str__(self):
+        return f"{self.item}, {self.image}"

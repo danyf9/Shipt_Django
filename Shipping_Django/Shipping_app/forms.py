@@ -68,3 +68,9 @@ class ImageForm(forms.ModelForm):
     class Meta:
         model = Image
         fields = ['image']
+
+
+class ImageItemForm(forms.ModelForm):
+    class Meta:
+        model = Image
+        fields = '__all__'

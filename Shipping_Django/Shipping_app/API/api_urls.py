@@ -14,5 +14,7 @@ urlpatterns = [
     path("signup", api_views.UserCreation.as_view()),
     path("shipment", api_views.ShipmentAPI.as_view()),
     path('reset', api_views.ResetCache.as_view()),
+    path("image", api_views.ItemImageAPI.as_view()),
+    path("image/<int:num>", api_views.ItemImageAPI.as_view()),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 # need to use localhost/API/media...

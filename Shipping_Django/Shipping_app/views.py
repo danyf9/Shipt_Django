@@ -7,7 +7,8 @@ from django.views import View
 from channels.layers import get_channel_layer
 
 from .models import Item, Shipment, Categories, Image
-from .forms import Search, AddItem, EditItem, AddShipment, EditShipment, FullSignup, ItemCategoryForm, ImageForm
+from .forms import Search, AddItem, EditItem, AddShipment, EditShipment, \
+    FullSignup, ItemCategoryForm, ImageForm, ImageItemForm
 
 
 # Create your views here.
@@ -101,6 +102,8 @@ class Add(View):
             forms = [AddShipment]
         elif kind == 'Category':
             forms = [ItemCategoryForm]
+        elif kind == 'Image':
+            forms = [ImageItemForm]
 
         return render(request=request, template_name='FormModel.html',
                       context={'kind': kind, 'action': 'Add', 'forms': forms})
@@ -114,6 +117,11 @@ class Add(View):
             form = AddShipment(data=request.POST)
         elif kind == 'Category':
             form = ItemCategoryForm(data=request.POST)
+        elif kind == 'Image':
+            form = ImageItemForm(instance=Image(
+                item=Item.objects.get(pk=request.POST['item']),
+                image=request.FILES['image'])
+            )
 
         if form.is_valid():
             try:
@@ -125,6 +133,7 @@ class Add(View):
                         item=Item.objects.get(pk=form.instance.pk),
                         category=form.cleaned_data['category']
                     ).save()
+                    request.FILES['image'].name = f"{form.instance.id}.jpg"
                     Image(
                         item=Item.objects.get(pk=form.instance.pk),
                         image=request.FILES['image']
@@ -132,6 +141,12 @@ class Add(View):
             except Exception as e:
                 msg = f'Error: {e}'
                 status = 'Error'
+        elif kind == 'Image':
+            request.FILES['image'].name = f"{form.instance.item.id}.jpg"
+            form.instance.save()
+            msg = f'Image added successfully'
+            status = 'Success'
+            kind = 'Item'
         else:
             error = form.errors
             msg = f'An unknown error has occurred\n{error}'

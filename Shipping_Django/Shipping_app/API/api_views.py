@@ -109,3 +109,14 @@ class ShipmentAPI(APIView):
         for iid in [item['id'] for item in data]:
             ShipmentList(shipment=shipment, item=Item.objects.get(id=iid)).save()
         return Response('ok')
+
+
+class ItemImageAPI(APIView):
+    @classmethod
+    def post(cls, request, num=None):
+        data = request.data['data']
+        if num is None:
+            res = [f"media/{image.image.name}" for image in Item.objects.get(pk=data).Item_image.all()]
+        else:
+            res = f"media/{Item.objects.get(pk=data).Item_image.all()[num].image.name}"
+        return Response(res)

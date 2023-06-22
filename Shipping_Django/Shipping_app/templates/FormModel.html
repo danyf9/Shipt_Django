@@ -1,13 +1,17 @@
 {% extends 'Base.html' %}
+{% load crispy_forms_tags %}
     {% block content_block %}
+    <style>
+        body::-webkit-scrollbar{
+            display: none;
+        }
+    </style>
     <h3 style="color: white; margin-left: 20px;">{{action}} {{kind}}</h3>
-        <form method="post" style="color: white; margin-left: 50px;" enctype="multipart/form-data">
+        <form method="post" style="color: white; margin-left: 50px; margin-right: 50px;" enctype="multipart/form-data">
             {% csrf_token %}
             {% for form in forms %}
-            {{form.as_p}}
+            {{ form | crispy }}
             {% endfor %}
             <input type="submit" value="submit" name="submit">
         </form>
     {% endblock %}
-</body>
-</html>

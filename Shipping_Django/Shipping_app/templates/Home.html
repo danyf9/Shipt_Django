@@ -13,7 +13,13 @@
           margin: 0;
           padding: 0;
           width: 100%;
-      }
+          overflow-y: hidden; /* Hide vertical scrollbar */
+          overflow-x: hidden; /* Hide horizontal scrollbar */      
+        }
+
+        .example::-webkit-scrollbar {
+            display: none;
+        }
 
       body {
           display: table;
@@ -70,7 +76,14 @@
           </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="{% url 'List' kind='Room' %}">All Rooms</a></li>
-            <!-- <li><a class="dropdown-item" href="{% url 'Add' kind='Category' %}">Create new room</a></li> -->
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Images
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'Add' kind='Image' %}">Add image</a></li>
           </ul>
         </li>
        </ul>
