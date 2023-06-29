@@ -10,6 +10,7 @@ urlpatterns = [
     path("items/<str:action>", api_views.ItemAPI.as_view()),
     path("item-page/<int:page_num>/<int:page_size>", api_views.ItemPage.as_view()),
     path("item-page/<int:page_num>/<int:page_size>/<str:category>", api_views.ItemPage.as_view()),
+    path("item-filter/<int:page_num>/<int:page_size>", api_views.FilterAPI.as_view()),
     path("login", obtain_auth_token),
     path("signup", api_views.UserCreation.as_view()),
     path("shipment", api_views.ShipmentAPI.as_view()),

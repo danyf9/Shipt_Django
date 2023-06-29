@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'daphne',
     'django.contrib.staticfiles',
+    "django_bootstrap5",
     'Shipping_app',
     'rest_framework',
     'rest_framework.authtoken',

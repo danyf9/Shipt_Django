@@ -188,15 +188,15 @@ class Edit(View):
 
     @classmethod
     def get(cls, request, kind, pk):
-        form = ''
+        forms = ''
         if kind == 'Item':
-            form = EditItem(instance=Item.objects.get(id=pk))
+            forms = [EditItem(instance=Item.objects.get(id=pk))]
         elif kind == 'User':
-            form = FullSignup(instance=User.objects.get(id=pk))
+            forms = [FullSignup(instance=User.objects.get(id=pk))]
         elif kind == 'Category':
-            form = ItemCategoryForm(instance=Categories)
+            forms = [ItemCategoryForm(instance=Categories)]
         return render(request=request, template_name='FormModel.html',
-                      context={'form': form, 'kind': kind, 'pk': pk, 'action': 'Edit'})
+                      context={'forms': forms, 'kind': kind, 'pk': pk, 'action': 'Edit'})
 
     @classmethod
     def post(cls, request, kind, pk):

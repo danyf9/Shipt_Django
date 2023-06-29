@@ -7,7 +7,6 @@ from ..models import Item, Categories, Shipment, ShipmentList
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from django.utils.decorators import method_decorator
-import json
 
 
 class UserCreation(APIView):
@@ -120,3 +119,44 @@ class ItemImageAPI(APIView):
         else:
             res = f"media/{Item.objects.get(pk=data).Item_image.all()[num].image.name}"
         return Response(res)
+
+
+class FilterAPI(APIView):
+    @classmethod
+    def post(cls, request, page_num, page_size):
+        data = request.data['filters']
+        res = Categories.objects.none()
+        current_place = page_num * page_size
+        end_place = current_place + page_size
+
+        if len(data['category']) != 0:
+            for c in data['category']:
+                res = res | Categories.objects.filter(
+                    category=cache.get('category_CAT_dict')[c]
+                )
+        else:
+            res = Categories.objects.filter()[current_place:end_place]
+
+        if int(data['price']) != 0:
+            if data['priceType'] == '>':
+                res = res.filter(item__price__gt=data['price'])
+            if data['priceType'] == '<':
+                res = res.filter(item__price__lt=data['price'])
+            if data['priceType'] == '=':
+                res = res.filter(item__price=data['price'])
+
+        if data['name'] != '':
+            res = res.filter(item__name=data['name'])
+
+        res = [r.item for r in res]
+
+        items = ItemSerializer(res[current_place: end_place], many=True).data
+
+        return Response(
+            {
+                'lst': items,
+                'size': len(items),
+                'categories': cache.get('categories')
+            }
+        )
+

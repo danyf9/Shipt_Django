@@ -41,7 +41,7 @@
             <a href="{% url 'Edit' kind=kind pk=obj.pk %}" style="float: right;">edit</a>
             <a href="{% url 'Full' kind=kind pk=obj.pk %}" style="float: right; margin-left: 15px; margin-right: 10px;">full details</a>
         </li>
-    {% endfor %}
+    {% endfor %} 
     {% else %}
     {% if kind == 'Category' %}
     {% for obj in obj_list %}

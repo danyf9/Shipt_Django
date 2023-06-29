@@ -1,6 +1,7 @@
 {% extends 'Base.html' %}
 {% load crispy_forms_tags %}
     {% block content_block %}
+    {% if user.is_superuser %}
     <style>
         body::-webkit-scrollbar{
             display: none;
@@ -14,4 +15,7 @@
             {% endfor %}
             <input type="submit" value="submit" name="submit">
         </form>
+        {% else %}
+        <h3 style="color: white; margin-left: 1rem;">Permission denied</h3>
+        {% endif %}
     {% endblock %}
