@@ -14,6 +14,8 @@ urlpatterns = [
     path("login", obtain_auth_token),
     path("signup", api_views.UserCreation.as_view()),
     path("shipment", api_views.ShipmentAPI.as_view()),
+    path("comments/<int:page_num>/<int:page_size>/<int:item_id>", api_views.CommentsAPI.as_view()),
+    path("user-comment", api_views.AddCommentAPI.as_view()),
     path('reset', api_views.ResetCache.as_view()),
     path("image", api_views.ItemImageAPI.as_view()),
     path("image/<int:num>", api_views.ItemImageAPI.as_view()),

@@ -1,4 +1,6 @@
 from time import time
+
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -66,6 +68,19 @@ class Categories(models.Model):
 class Image(models.Model):
     item = models.ForeignKey(to=Item, related_name='Item_image', on_delete=models.CASCADE)
     image = models.FileField(null=False, upload_to='items')
+    # image = models.CharField(max_length=50, null=True)
+    # status = models.CharField(max_length=10, null=False, choices=[
+    #     ('W', 'waiting'), ('C', 'Confirmed')])
 
     def __str__(self):
         return f"{self.item}, {self.image}"
+
+
+class Comment(models.Model):
+    user = models.ForeignKey(to=User, related_name='User_comment', on_delete=models.CASCADE)
+    comment_text = models.CharField(max_length=100)
+    rating = models.PositiveIntegerField(default=5, validators=[
+        MinValueValidator(1), MaxValueValidator(5)])
+    item = models.ForeignKey(to=Item, related_name='Item_comment', on_delete=models.CASCADE)
+    class Meta:
+        unique_together = ('user', 'item')

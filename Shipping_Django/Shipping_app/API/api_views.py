@@ -2,8 +2,8 @@ from django.core.cache import cache
 from django.views.decorators.cache import cache_page
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import ItemSerializer
-from ..models import Item, Categories, Shipment, ShipmentList
+from .serializers import ItemSerializer, CommentSerializer
+from ..models import Item, Categories, Shipment, ShipmentList, Comment
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from django.utils.decorators import method_decorator
@@ -61,7 +61,8 @@ class ItemAPI(APIView):
                             f" try replacing the '/{action}' with '/add'")
 
 
-@method_decorator(cache_page(60 * 15), name='dispatch')
+# cache_page(time_in_seconds)
+@method_decorator(cache_page(60), name='dispatch')
 class ItemPage(APIView):
     @classmethod
     def get(cls, request, page_num, page_size, category=None):
@@ -150,7 +151,7 @@ class FilterAPI(APIView):
 
         res = [r.item for r in res]
 
-        items = ItemSerializer(res[current_place: end_place], many=True).data
+        items = ItemSerializer(list(set(res))[current_place: end_place], many=True).data
 
         return Response(
             {
@@ -160,3 +161,55 @@ class FilterAPI(APIView):
             }
         )
 
+
+def all_rating(item_id):
+    rating = 0
+    lst = Item.objects.get(id=item_id).Item_comment.filter()
+    for i in lst:
+        rating += i.rating
+    return rating/len(lst)
+
+class CommentsAPI(APIView):
+    @classmethod
+    def get(cls, request, page_num, page_size, item_id):
+        rating = 0
+        current_place = page_num * page_size
+        end_place = current_place + page_size
+
+        comments = CommentSerializer(Item.objects.get(id=item_id).Item_comment.filter()
+                                     [current_place: end_place], many=True).data
+        if Item.objects.get(id=item_id).Item_comment.count() == 0:
+            return Response(
+                {'comments': [],
+                 'rating': 0,
+                 'size': Item.objects.get(id=item_id).Item_comment.count()
+                 }
+            )
+        else:
+            for c in comments:
+                c['user'] = User.objects.get(pk=c['user']).username
+            return Response(
+                {'comments': comments,
+                 'rating': all_rating(item_id),
+                 'size': Item.objects.get(id=item_id).Item_comment.count()
+                 }
+            )
+
+
+class AddCommentAPI(APIView):
+    @classmethod
+    def post(cls, request):
+        data = request.data['data']
+        try:
+            Comment(user=Token.objects.get(key=data['Token']).user,
+                    comment_text=data['comment'], rating=data['commentRating'],
+                    item=Item.objects.get(pk=data['item'])).save()
+        except Exception as e:
+            print(e)
+            if str(e) == 'UNIQUE constraint failed: Shipping_app_comment.user_id, Shipping_app_comment.item_id':
+                return Response({'msg': 'You cannot comment on this item more than once',
+                                 'color': 'red'})
+            else:
+                return Response({'msg': str(e),
+                                 'color': 'red'})
+        return Response('')
