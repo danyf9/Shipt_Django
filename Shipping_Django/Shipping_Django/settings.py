@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'daphne',
     'django.contrib.staticfiles',
-    "django_bootstrap5",
     'Shipping_app',
     'rest_framework',
     'rest_framework.authtoken',
@@ -96,6 +95,17 @@ DATABASES = {
     }
 }
 
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'Prj_DB',
+#         'USER': 'postgres',
+#         'PASSWORD': os.environ['POSTGRES_KEY'],
+#         'HOST': '1.cin4tpxrmmsd.eu-central-1.rds.amazonaws.com',
+#         'PORT': '5432',
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators

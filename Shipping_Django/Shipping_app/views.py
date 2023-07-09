@@ -170,7 +170,7 @@ class Full(View):
 
             obj_dict = {'ID': obj.pk, 'Name': obj.name, 'Description': obj.description,
                         'Price': obj.price,
-                        'Categories': l1}
+                        'Categories': l1, 'Picture': f"API/media/{obj.Item_image.filter()[0].image}"}
 
         elif kind == 'Shipment':
             obj = Shipment.objects.get(id=pk)
@@ -252,7 +252,7 @@ class SignupView(View):
 
     @classmethod
     def get(cls, request):
-        return render(request=request, template_name='registration/Login.html',
+        return render(request=request, template_name='registration/login.html',
                       context={'form': FullSignup, 'action': 'Signup'})
 
     @classmethod
@@ -271,7 +271,7 @@ class SignupView(View):
                           context={'direct': 'Home', 'kind': 'User', 'msg': msg,
                                    'status': status})
         else:
-            return render(request=request, template_name='registration/Login.html',
+            return render(request=request, template_name='registration/login.html',
                           context={'form': user, 'action': 'Signup', 'user': user.instance.username})
 
 

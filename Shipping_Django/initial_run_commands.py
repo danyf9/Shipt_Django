@@ -3,12 +3,14 @@ import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Shipping_Django.settings")
 
 import django
+
 django.setup()
 
 from django.core.cache import cache
 from Shipping_app.models import Categories
 from django.contrib.auth.models import User
 
+# change to 'python3' before launch in ubuntu
 os.system('python.exe ./manage.py makemigrations')
 os.system('python.exe ./manage.py migrate')
 try:

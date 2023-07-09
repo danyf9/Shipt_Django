@@ -105,8 +105,8 @@ class ShipmentAPI(APIView):
         data = request.data['data']
         shipment = Shipment(user=Token.objects.get(key=request.data['user']).user)
         shipment.save()
-        for iid in [item['id'] for item in data]:
-            ShipmentList(shipment=shipment, item=Item.objects.get(id=iid)).save()
+        for _id in [item['id'] for item in data]:
+            ShipmentList(shipment=shipment, item=Item.objects.get(id=_id)).save()
         return Response('ok')
 
 
