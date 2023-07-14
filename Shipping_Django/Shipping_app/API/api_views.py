@@ -28,6 +28,14 @@ class UserCreation(APIView):
             return Response({"status": "failed", "msg": f"Error:{e}"})
 
 
+class GetUserWithToken(APIView):
+    @classmethod
+    def post(cls, request):
+        return Response(
+            Token.objects.get(key=request.data['token']).user.username
+        )
+
+
 class ItemAPI(APIView):
     @classmethod
     def get(cls, request, action=None):
@@ -62,7 +70,7 @@ class ItemAPI(APIView):
 
 
 # cache_page(time_in_seconds)
-@method_decorator(cache_page(60), name='dispatch')
+# @method_decorator(cache_page(60), name='dispatch')
 class ItemPage(APIView):
     @classmethod
     def get(cls, request, page_num, page_size, category=None):
@@ -104,7 +112,7 @@ class ShipmentAPI(APIView):
     @classmethod
     def post(cls, request):
         data = request.data['data']
-        shipment = Shipment(user=Token.objects.get(key=request.data['user']).user)
+        shipment = Shipment(user=Token.objects.get(key=request.data['token']).user)
         shipment.save()
         for _id in [item['id'] for item in data]:
             ShipmentList(shipment=shipment, item=Item.objects.get(id=_id)).save()
@@ -136,7 +144,7 @@ class FilterAPI(APIView):
                     category=cache.get('category_CAT_dict')[c]
                 )
         else:
-            res = Categories.objects.filter()[current_place:end_place]
+            res = Categories.objects.filter()
 
         if int(data['price']) != 0:
             if data['priceType'] == '>':
@@ -167,7 +175,8 @@ def all_rating(item_id):
     lst = Item.objects.get(id=item_id).Item_comment.filter()
     for i in lst:
         rating += i.rating
-    return rating/len(lst)
+    return rating / len(lst)
+
 
 class CommentsAPI(APIView):
     @classmethod

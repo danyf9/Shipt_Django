@@ -1,14 +1,13 @@
 from django.contrib.auth import login
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db.models import Q
-from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.views import View
 from channels.layers import get_channel_layer
 
 from .models import Item, Shipment, Categories, Image
-from .forms import Search, AddItem, EditItem, AddShipment, EditShipment, \
-    FullSignup, ItemCategoryForm, ImageForm, ImageItemForm
+from .forms import Search, ItemForm, EditShipment, \
+    FullSignup, ItemCategoryForm, ImageForm, EditUserForm
 
 
 # Create your views here.
@@ -95,33 +94,36 @@ class Add(View):
     @classmethod
     def get(cls, request, kind):
         forms = ''
+        permission = Group.objects.get(name='Add_permission') in request.user.groups.all()
 
         if kind == 'Item':
-            forms = [AddItem, ImageForm]
-        elif kind == 'Shipment':
-            forms = [AddShipment]
+            forms = [ItemForm(action='Add'), ImageForm]
         elif kind == 'Category':
             forms = [ItemCategoryForm]
         elif kind == 'Image':
-            forms = [ImageItemForm]
+            forms = [ImageForm(item=True)]
 
         return render(request=request, template_name='FormModel.html',
-                      context={'kind': kind, 'action': 'Add', 'forms': forms})
+                      context={'kind': kind, 'action': 'Add', 'forms': forms,
+                               'permission': permission})
 
     @classmethod
     def post(cls, request, kind):
         form, msg, status = '', '', ''
-        if kind == 'Item':
-            form = AddItem(data=request.POST)
-        elif kind == 'Shipment':
-            form = AddShipment(data=request.POST)
+        permission = Group.objects.get(name='Add_permission') in request.user.groups.all()
+
+        if not permission:
+            return render(request=request, template_name='Modal.html',
+                          context={'direct': 'List', 'kind': kind, 'msg': 'permission denied',
+                                   'status': 'Permission denied'})
+        elif kind == 'Item':
+            form = ItemForm(data=request.POST, action='Add')
         elif kind == 'Category':
             form = ItemCategoryForm(data=request.POST)
         elif kind == 'Image':
-            form = ImageItemForm(instance=Image(
+            form = ImageForm(instance=Image(
                 item=Item.objects.get(pk=request.POST['item']),
-                image=request.FILES['image'])
-            )
+                image=request.FILES['image']), item=True)
 
         if form.is_valid():
             try:
@@ -148,9 +150,9 @@ class Add(View):
             status = 'Success'
             kind = 'Item'
         else:
-            error = form.errors
-            msg = f'An unknown error has occurred\n{error}'
-            status = 'Error'
+            return render(request=request, template_name='FormModel.html',
+                          context={'forms': [form], 'kind': kind, 'action': 'Add'})
+
         return render(request=request, template_name='Modal.html',
                       context={'direct': 'List', 'kind': kind, 'msg': msg,
                                'status': status})
@@ -162,8 +164,8 @@ class Full(View):
     def get(cls, request, kind, pk):
         obj_dict = {}
         if kind == 'Item':
-            obj = Item.objects.get(id=pk)
-            l1, l2 = [], []
+            obj = Item.objects.get(pk=pk)
+            l1 = []
             for q in [c.category for c in obj.Item_category.all()]:
                 l1.append({'category': {c[0]: c[1] for c in Categories.categories}[q],
                            'pk': Categories.objects.get(item=obj, category=q).pk})
@@ -173,12 +175,16 @@ class Full(View):
                         'Categories': l1, 'Picture': f"API/media/{obj.Item_image.filter()[0].image}"}
 
         elif kind == 'Shipment':
-            obj = Shipment.objects.get(id=pk)
-            obj_dict = {'ID': obj.pk, 'Date': obj.order_date, 'User': obj.user.username}
-
+            obj = Shipment.objects.get(pk=pk)
+            obj_dict = {'ID': obj.pk, 'Date': obj.order_date, 'User': obj.user.username,
+                        'sitems': {shipment.item for shipment in obj.list_shipment.all()}}
         elif kind == 'Category':
             obj = Categories.objects.get(pk=pk)
             obj_dict = {'ID': obj.pk, 'Category': obj.category, 'Item': obj.item}
+
+        elif kind == 'Profile':
+            obj = User.objects.get(pk=pk)
+            obj_dict = {'Username': obj.username, 'Full Name': obj.get_full_name(), 'email': obj.email}
 
         return render(request=request, template_name='Full_details.html',
                       context={'obj_dict': obj_dict})
@@ -189,26 +195,50 @@ class Edit(View):
     @classmethod
     def get(cls, request, kind, pk):
         forms = ''
+        permission = Group.objects.get(name='Edit_permission') in request.user.groups.all()
+
         if kind == 'Item':
-            forms = [EditItem(instance=Item.objects.get(id=pk))]
-        elif kind == 'User':
-            forms = [FullSignup(instance=User.objects.get(id=pk))]
+            forms = [ItemForm(instance=Item.objects.get(id=pk), action='Edit')]
+        elif kind == 'Shipment':
+            forms = [EditShipment(instance=Shipment.objects.get(id=pk))]
+        elif kind == 'Profile':
+            forms = [EditUserForm(instance=User.objects.get(id=pk),
+                                  email=Group.objects.get(name='User_permission') in request.user.groups.all(),
+                                  kind=kind)]
+            permission = True
+        elif kind == 'Password':
+            forms = [EditUserForm(instance=User.objects.get(id=pk))]
+            permission = Group.objects.get(name='User_permission') in request.user.groups.all()
         elif kind == 'Category':
             forms = [ItemCategoryForm(instance=Categories)]
         return render(request=request, template_name='FormModel.html',
-                      context={'forms': forms, 'kind': kind, 'pk': pk, 'action': 'Edit'})
+                      context={'forms': forms, 'kind': kind, 'pk': pk, 'action': 'Edit',
+                               'permission': permission})
 
     @classmethod
     def post(cls, request, kind, pk):
-        form = ''
-        if kind == 'Item':
-            form = EditItem(data=request.POST, instance=Item.objects.get(id=pk))
+        form = msg = status = ''
+        direct = 'List'
+        permission = Group.objects.get(name='Edit_permission') in request.user.groups.all()
+
+        if not permission:
+            return render(request=request, template_name='Modal.html',
+                          context={'direct': 'List', 'kind': kind, 'msg': 'permission denied',
+                                   'status': 'Permission denied'})
+        elif kind == 'Item':
+            form = ItemForm(data=request.POST, instance=Item.objects.get(id=pk), action='Edit')
         elif kind == 'Shipment':
             form = EditShipment(data=request.POST, instance=Shipment.objects.get(id=pk))
         elif kind == 'Category':
             form = ItemCategoryForm(data=request.POST, instance=Categories.objects.get(pk=pk))
-        elif kind == 'User':
-            form = FullSignup(data=request.POST, instance=request.user)
+        elif kind == 'Profile':
+            form = EditUserForm(data=request.POST, instance=request.user,
+                                email=Group.objects.get(name='User_permission') in request.user.groups.all())
+        elif kind == 'Password':
+            form = EditUserForm(instance=request.user)
+            if form.cleaned_data['password1'] == form.cleaned_data['password2'] \
+                    and form.instance.check_password(form.cleaned_data['password']):
+                form.instance.set_password(form.cleaned_data['password1'])
         if form.is_valid():
             try:
                 form.save()
@@ -218,17 +248,16 @@ class Edit(View):
                 msg = f'Error: {e}'
                 status = 'Error'
         else:
-            error = form.errors
-            msg = f'An unknown error has occurred\n{error}'
-            status = 'Error'
-        if kind == 'User':
+            return render(request=request, template_name='FormModel.html',
+                          context={'forms': [form], 'kind': kind, 'pk': pk, 'action': 'Edit',
+                                   'permission': permission})
+
+        if kind == 'Profile':
             login(request=request, user=form.instance)
-            return render(request=request, template_name='Modal.html',
-                          context={'direct': 'Home', 'kind': kind, 'msg': msg,
-                                   'status': status})
+            direct = 'Home'
 
         return render(request=request, template_name='Modal.html',
-                      context={'direct': 'List', 'kind': kind, 'msg': msg,
+                      context={'direct': direct, 'kind': kind, 'msg': msg,
                                'status': status})
 
 

@@ -1,4 +1,4 @@
-{% extends 'Base.html' %}
+{% extends 'Home.html' %}
     {% block content_block %}
     <script>
         window.onload = () => {
@@ -17,7 +17,7 @@
                     {{msg}}
                 </div>
                 <div class="modal-footer">
-                    {% if kind == 'User' %}
+                    {% if kind == 'Profile' %}
                     <a type="link" class="btn btn-primary" href="{% url direct %}">Ok</a>
                     {% else %}
                     <a type="link" class="btn btn-primary" href="{% url direct kind=kind %}">Ok</a>

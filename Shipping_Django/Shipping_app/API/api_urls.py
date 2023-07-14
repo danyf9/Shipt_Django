@@ -13,6 +13,7 @@ urlpatterns = [
     path("item-filter/<int:page_num>/<int:page_size>", api_views.FilterAPI.as_view()),
     path("login", obtain_auth_token),
     path("signup", api_views.UserCreation.as_view()),
+    path("user", api_views.GetUserWithToken.as_view()),
     path("shipment", api_views.ShipmentAPI.as_view()),
     path("comments/<int:page_num>/<int:page_size>/<int:item_id>", api_views.CommentsAPI.as_view()),
     path("user-comment", api_views.AddCommentAPI.as_view()),

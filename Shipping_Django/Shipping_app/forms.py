@@ -9,26 +9,20 @@ class Search(forms.Form):
     var = forms.CharField(required=False, max_length=100)
 
 
-class AddItem(forms.ModelForm):
+class ItemForm(forms.ModelForm):
 
     category = forms.ChoiceField(choices=Categories.categories)
-
-    class Meta:
-        model = Item
-        fields = '__all__'
-
-
-class EditItem(forms.ModelForm):
     id = forms.IntegerField(disabled=True)
 
+    def __init__(self, *args, action, **kwargs):
+        super().__init__(*args, **kwargs)
+        if action == 'Add':
+            self.fields['id'].disabled = False
+        elif action == 'Edit':
+            self.fields['category'].widget = forms.HiddenInput()
+
     class Meta:
         model = Item
-        fields = '__all__'
-
-
-class AddShipment(forms.ModelForm):
-    class Meta:
-        model = Shipment
         fields = '__all__'
 
 
@@ -37,6 +31,25 @@ class EditShipment(forms.ModelForm):
 
     class Meta:
         model = Shipment
+        fields = '__all__'
+
+
+class ItemCategoryForm(forms.ModelForm):
+
+    class Meta:
+        model = Categories
+        fields = '__all__'
+
+
+class ImageForm(forms.ModelForm):
+
+    def __init__(self, *args, item, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not item:
+            self.fields['item'].widget = forms.HiddenInput()
+
+    class Meta:
+        model = Image
         fields = '__all__'
 
 
@@ -57,20 +70,23 @@ class FullSignup(UserCreationForm):
         fields = '__all__'
 
 
-class ItemCategoryForm(forms.ModelForm):
+class EditUserForm(forms.ModelForm):
+
+    first_name = forms.CharField(min_length=1)
+    last_name = forms.CharField(min_length=1)
+
+    def __init__(self, *args, email=False, kind='', **kwargs):
+        super().__init__(*args, **kwargs)
+        if not email:
+            self.email = forms.EmailField()
+        if kind == 'Profile':
+            self.password = forms.CharField(widget=forms.PasswordInput, label='Old password')
+            self.password1 = forms.CharField(widget=forms.PasswordInput, label='New password')
+            self.password2 = forms.CharField(widget=forms.PasswordInput, label='New password confirmation')
 
     class Meta:
-        model = Categories
-        fields = '__all__'
-
-
-class ImageForm(forms.ModelForm):
-    class Meta:
-        model = Image
-        fields = ['image']
-
-
-class ImageItemForm(forms.ModelForm):
-    class Meta:
-        model = Image
+        model = User
+        exclude = ['username', 'last_login', 'is_superuser', 'groups',
+                   'user_permissions', 'is_staff', 'password',
+                   'is_active', 'date_joined']
         fields = '__all__'

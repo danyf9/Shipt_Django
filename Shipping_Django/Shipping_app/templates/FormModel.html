@@ -1,7 +1,7 @@
-{% extends 'Base.html' %}
+{% extends 'Home.html' %}
 {% load crispy_forms_tags %}
     {% block content_block %}
-    {% if user.is_superuser %}
+    {% if permission %}
     <style>
         body::-webkit-scrollbar{
             display: none;

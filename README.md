@@ -10,7 +10,7 @@
 use the following commands (must have virtualenv installed):
 1. python -m venv ./venv
 2. WIN: ./venv/Scripts/activate | LINUX: source ./venv/bin/activate
-3. pip install -r .\requirements.txt.
+3. pip install -r ./requirements.txt.
 4. python ./Shipping_django/initial_run_commands.py
 
 ## 2. Activation

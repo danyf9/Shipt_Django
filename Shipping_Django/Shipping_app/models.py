@@ -82,5 +82,6 @@ class Comment(models.Model):
     rating = models.PositiveIntegerField(default=5, validators=[
         MinValueValidator(1), MaxValueValidator(5)])
     item = models.ForeignKey(to=Item, related_name='Item_comment', on_delete=models.CASCADE)
+
     class Meta:
         unique_together = ('user', 'item')

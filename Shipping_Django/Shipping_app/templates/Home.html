@@ -1,3 +1,4 @@
+{% if not user.is_authenticated or user.is_staff %}
 <!DOCTYPE html>
 <html lang="en">
   {% load static %}
@@ -13,8 +14,6 @@
           margin: 0;
           padding: 0;
           width: 100%;
-          overflow-y: hidden; /* Hide vertical scrollbar */
-          overflow-x: hidden; /* Hide horizontal scrollbar */      
         }
 
         .example::-webkit-scrollbar {
@@ -60,7 +59,6 @@
           </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="{% url 'List' kind='Shipment' %}">All shipments</a></li>
-            <li><a class="dropdown-item" href="{% url 'Add' kind='Shipment' %}">Add shipments</a></li>
           </ul>
         </li>
         <li class="nav-item dropdown">
@@ -89,6 +87,7 @@
           </ul>
         </li>
        </ul>
+       {% if not action %}
       <form class="d-flex" role="search" method="post" 
       action="">
       {% csrf_token %}
@@ -96,14 +95,18 @@
         style="background-color: black;" name="Var">
         <button class="btn btn-outline-success" type="submit" name="search">Search</button>
       </form>
+      {% endif %}
       <li class="btn-group"
         style="color: white; list-style: none; margin-left: 10px; margin-bottom: 1%; margin-top: 1%;">
         <a class="nav-link dropdown-toggle" href="" role="button" data-bs-toggle="dropdown" aria-expanded="false">
           User
         </a>
         <ul class="dropdown-menu dropdown-menu-lg-end">
-          <li><a class="dropdown-item" href="{% url 'Edit' kind='User' pk=user.pk %}">Edit User</a></li>
+          <li><a class="dropdown-item" href="{% url 'Full' kind='Profile' pk=user.pk%}">Profile</a></li>
+          <li><a class="dropdown-item" href="{% url 'Edit' kind='Profile' pk=user.pk%}">Edit profile</a></li>
+          <li><a class="dropdown-item" href="{% url 'Edit' kind='Password' pk=user.pk%}">Reset password</a></li>
           <li><a class="dropdown-item" href="{% url 'Logout' %}" style="color: red;">Logout</a></li>
+
         </ul>
       </li>
       {% else %}
@@ -117,13 +120,13 @@
 </nav>
 <br><br><br><br>
     {% block content_block %}
-    {% if user.is_authenticated %}
     <h3 class="my-block" style="color: white;user-select: none;">Welcome {{user}} to
-        the Shipt database</h3>
-    {% else %}
-    <h3 class="my-block" style="color: white;user-select: none;">Welcome to
-      the Shipt database</h3>    
-    {% endif %}
+        the Shipt database</h3>  
     {% endblock %}
 </body>
 </html>
+{% else %}
+Permission denied
+<br/>
+<a href="{% url 'Logout' %}">logout</a>
+{% endif %}
