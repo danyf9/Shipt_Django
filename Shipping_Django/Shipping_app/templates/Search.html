@@ -14,6 +14,7 @@
     {% for item in items %}
         <li style="color: white;border-bottom:1px solid gray;">
             <p style="display: inline;">{{item}}</p>
+            {% if groups.Delete_permission %}
             <a type="link" data-bs-toggle="modal" data-bs-target="#exampleModal"
             role="link" style="float: right; margin-left: 15px; margin-right: 10px;"
             href="" onclick="deleteItem('{{item}}', '{{item.id}}', 'Item', 'linkdltItem','dltxtitem')"
@@ -37,9 +38,14 @@
                   </div>
                 </div>
             </div>
+            {% endif %}
+            {% if groups.Edit_permission %}
             <a href="{% url 'Edit' kind='Item' pk=item.id %}" style="float: right;">edit</a>
+            {% endif %}
+            {% if groups.Edit_permission %}
             <a href="{% url 'Full' kind='Item' pk=item.id %}" 
             style="float: right; margin-left: 15px; margin-right: 10px;">full details</a>
+            {% endif %}
         </li>
     {% endfor %}
     {% else %}
@@ -89,4 +95,47 @@
     </li>
     {% endif %}
     </ol>
+    {% if groups.User_permission %}
+    <h3 style="color:white; padding-left: 30px;">Users found</h3><br>
+    <ol style="list-style-position: inside; padding-right: 30px; list-style: none;">
+    {% if users %}
+    {% for user in users %}
+        <li style="color: white;border-bottom:1px solid gray;">
+            {{user}}
+            <a type="link" data-bs-toggle="modal" data-bs-target="#exampleModal2"
+            role="link" style="float: right; margin-left: 15px; margin-right: 10px;"
+            href="" 
+            onclick="deleteItem('{{user}}', '{{user.id}}', 'User', 'linkdltUser', 'dltxtuser')"
+            >delete</a>
+            <div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="exampleModalLabel" style="color:black">Notice</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="color: black" id="dltxtuser">
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                      <a type="link" class="btn btn-primary"
+                      href="" onclick="location.reload()"
+                      id="linkdltUser"
+                      >Yes</a>
+                    </div>
+                  </div>
+                </div>
+            </div>
+            <a href="{% url 'Edit' kind='User' pk=user.id %}" style="float: right;">edit</a>
+            <a href="{% url 'Full' kind='User' pk=user.id %}" 
+            style="float: right; margin-left: 15px; margin-right: 10px;">full details</a>
+        </li>
+    {% endfor %}
+    {% else %}
+    <li style="color: white;border-bottom:1px solid gray;">
+        no shipments were found
+    </li>
+    {% endif %}
+    </ol>
+    {% endif %}
     {% endblock %}

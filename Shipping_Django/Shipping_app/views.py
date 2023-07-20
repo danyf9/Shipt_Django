@@ -13,7 +13,7 @@ from .forms import Search, ItemForm, EditShipment, \
 # Create your views here.
 
 
-def search_all(var):
+def search_all(var, request):
     item_list = Item.objects.filter(
         Q(id__contains=var) |
         Q(name__contains=var) |
@@ -25,7 +25,16 @@ def search_all(var):
         Q(id__contains=var) |
         Q(order_date__contains=var)
     )
-    return {'items': item_list, 'shipments': shipment_list}
+    if Group.objects.get(name='User_permission') in request.user.groups.all():
+        user_list = User.objects.filter(
+            Q(username__contains=var) |
+            Q(first_name__contains=var) |
+            Q(last_name__contains=var) |
+            Q(email__contains=var)
+        )
+    else:
+        user_list = {}
+    return {'items': item_list, 'shipments': shipment_list, 'users': user_list}
 
 
 def get_items(category):
@@ -37,10 +46,15 @@ def get_items(category):
     return obj_lst[{lst[1]: lst[0] for lst in Categories.categories}[category]]
 
 
+def groups(request):
+    return {group.name: (group in request.user.groups.all()) for group in Group.objects.all()}
+
+
 class Home(View):
     @classmethod
     def get(cls, request):
-        return render(request=request, template_name='Home.html')
+        return render(request=request, template_name='Home.html',
+                      context={'groups': groups(request)})
 
     @classmethod
     def post(cls, request):
@@ -51,7 +65,7 @@ class SearchView(View):
     @classmethod
     def get(cls, request, var):
         return render(request=request, template_name='Search.html',
-                      context=search_all(var))
+                      context=dict(search_all(var, request), groups=groups(request)))
 
     @classmethod
     def post(cls, request, var):
@@ -78,15 +92,19 @@ class List(View):
 
         elif kind == 'Room':
             obj_lst = [k.split('_')[1] for k in list(get_channel_layer().groups.keys())]
+
+        elif kind == 'User':
+            obj_lst = User.objects.all()
+
         return render(request=request, template_name='List.html',
                       context={'obj_list': obj_lst,
-                               'kind': kind})
+                               'kind': kind, 'groups': groups(request)})
 
     @classmethod
     def post(cls, request, kind):
         data = Search(data=request.POST).data.dict()
         return render(request=request, template_name='Search.html',
-                      context=search_all(data['Var']))
+                      context=dict(search_all(data['Var'], request), groups=groups(request)))
 
 
 class Add(View):
@@ -102,10 +120,12 @@ class Add(View):
             forms = [ItemCategoryForm]
         elif kind == 'Image':
             forms = [ImageForm(item=True)]
+        elif kind == 'User':
+            forms = [FullSignup]
 
         return render(request=request, template_name='FormModel.html',
                       context={'kind': kind, 'action': 'Add', 'forms': forms,
-                               'permission': permission})
+                               'permission': permission, 'groups': groups(request)})
 
     @classmethod
     def post(cls, request, kind):
@@ -124,7 +144,8 @@ class Add(View):
             form = ImageForm(instance=Image(
                 item=Item.objects.get(pk=request.POST['item']),
                 image=request.FILES['image']), item=True)
-
+        elif kind == 'User':
+            form = FullSignup(data=request.POST)
         if form.is_valid():
             try:
                 form.save()
@@ -151,7 +172,7 @@ class Add(View):
             kind = 'Item'
         else:
             return render(request=request, template_name='FormModel.html',
-                          context={'forms': [form], 'kind': kind, 'action': 'Add'})
+                          context={'forms': [form], 'kind': kind, 'action': 'Add', 'groups': groups(request)})
 
         return render(request=request, template_name='Modal.html',
                       context={'direct': 'List', 'kind': kind, 'msg': msg,
@@ -173,21 +194,24 @@ class Full(View):
             obj_dict = {'ID': obj.pk, 'Name': obj.name, 'Description': obj.description,
                         'Price': obj.price,
                         'Categories': l1, 'Picture': f"API/media/{obj.Item_image.filter()[0].image}"}
-
         elif kind == 'Shipment':
             obj = Shipment.objects.get(pk=pk)
             obj_dict = {'ID': obj.pk, 'Date': obj.order_date, 'User': obj.user.username,
-                        'sitems': {shipment.item for shipment in obj.list_shipment.all()}}
+                        'sitems':
+                            sorted([shipment.item for shipment in obj.list_shipment.all()], key=lambda item: item.id)}
         elif kind == 'Category':
             obj = Categories.objects.get(pk=pk)
             obj_dict = {'ID': obj.pk, 'Category': obj.category, 'Item': obj.item}
-
-        elif kind == 'Profile':
+        elif kind == 'Profile' or 'User':
             obj = User.objects.get(pk=pk)
             obj_dict = {'Username': obj.username, 'Full Name': obj.get_full_name(), 'email': obj.email}
 
         return render(request=request, template_name='Full_details.html',
-                      context={'obj_dict': obj_dict})
+                      context={'obj_dict': obj_dict, 'groups': groups(request)})
+
+    @classmethod
+    def post(cls, request, kind, pk):
+        return redirect('Search', var=request.POST.dict()['Var'])
 
 
 class Edit(View):
@@ -207,19 +231,24 @@ class Edit(View):
                                   kind=kind)]
             permission = True
         elif kind == 'Password':
-            forms = [EditUserForm(instance=User.objects.get(id=pk))]
-            permission = Group.objects.get(name='User_permission') in request.user.groups.all()
+            permission = Group.objects.get(name='User_permission') in request.user.groups.all() or request.user.pk == pk
+            forms = [EditUserForm(instance=User.objects.get(id=pk), kind='Password',
+                     edit_user=not Group.objects.get(name='User_permission') in request.user.groups.all())]
         elif kind == 'Category':
             forms = [ItemCategoryForm(instance=Categories)]
+        elif kind == 'User':
+            forms = [EditUserForm(instance=User.objects.get(pk=pk), kind=kind)]
         return render(request=request, template_name='FormModel.html',
                       context={'forms': forms, 'kind': kind, 'pk': pk, 'action': 'Edit',
-                               'permission': permission})
+                               'permission': permission, 'groups': groups(request)})
 
     @classmethod
     def post(cls, request, kind, pk):
         form = msg = status = ''
         direct = 'List'
-        permission = Group.objects.get(name='Edit_permission') in request.user.groups.all()
+        permission = Group.objects.get(name='Edit_permission') in request.user.groups.all() \
+                     or kind == 'Password' and (request.user.pk == pk or
+                                                Group.objects.get(name='User_permission') in request.user.groups.all())
 
         if not permission:
             return render(request=request, template_name='Modal.html',
@@ -235,10 +264,22 @@ class Edit(View):
             form = EditUserForm(data=request.POST, instance=request.user,
                                 email=Group.objects.get(name='User_permission') in request.user.groups.all())
         elif kind == 'Password':
-            form = EditUserForm(instance=request.user)
-            if form.cleaned_data['password1'] == form.cleaned_data['password2'] \
-                    and form.instance.check_password(form.cleaned_data['password']):
-                form.instance.set_password(form.cleaned_data['password1'])
+            form = EditUserForm(data=request.POST, instance=User.objects.get(id=pk))
+            if form.data['new_password1'] == form.data['new_password2'] \
+                    and form.instance.check_password(form.data['old_password']):
+                form.instance.set_password(form.data['new_password1'])
+                form.instance.save()
+            else:
+                return render(request=request, template_name='Modal.html',
+                              context={'direct': 'Home', 'kind': kind, 'msg': 'one or more of the following could not '
+                                                                              'be satisfied:\n1. Old password did not '
+                                                                              'match with user password\n2. Password '
+                                                                              'confirmation could not be established',
+                                       'status': 'Failed'})
+        elif kind == 'User':
+            form = EditUserForm(data=request.POST, instance=User.objects.get(pk=pk), kind=kind)
+            form.instance.set_password(form.data['password'])
+            form.instance.save()
         if form.is_valid():
             try:
                 form.save()
@@ -250,12 +291,11 @@ class Edit(View):
         else:
             return render(request=request, template_name='FormModel.html',
                           context={'forms': [form], 'kind': kind, 'pk': pk, 'action': 'Edit',
-                                   'permission': permission})
+                                   'permission': permission, 'groups': groups(request)})
 
-        if kind == 'Profile':
+        if kind == 'Profile' or kind == 'Password':
             login(request=request, user=form.instance)
             direct = 'Home'
-
         return render(request=request, template_name='Modal.html',
                       context={'direct': direct, 'kind': kind, 'msg': msg,
                                'status': status})
@@ -273,6 +313,8 @@ class Delete(View):
             obj = Shipment.objects.get(pk=pk)
         elif kind == 'Category':
             obj = Categories.objects.get(pk=pk)
+        elif kind == 'User':
+            obj = User.objects.get(pk=pk)
         obj.delete()
         return redirect('List', kind=kind)
 

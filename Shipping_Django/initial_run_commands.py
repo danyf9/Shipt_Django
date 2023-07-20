@@ -15,14 +15,14 @@ from rest_framework.authtoken.models import Token
 os.system('python.exe ./manage.py makemigrations')
 os.system('python.exe ./manage.py migrate')
 try:
-    # user = User.objects.create_user(username='Admin', password='123').save()
-    user = User.objects.get(username='Admin')
+    user = User.objects.create_user(username='Admin', password='123').save()
     token = Token.objects.create(user=user)
     Group(name='User_permission').save()
     Group(name='Edit_permission').save()
     Group(name='View_permission').save()
     Group(name='Chat_permission').save()
     Group(name='Add_permission').save()
+    Group(name='Delete_permission').save()
     for group in Group.objects.all():
         try:
             user.groups.add(group)

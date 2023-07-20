@@ -16,6 +16,7 @@
     {% for obj in obj_list %}
         <li style="color: white;border-bottom:1px solid gray;">
             {{obj}}
+            {% if groups.Delete_permission %}
             <a type="link" data-bs-toggle="modal" data-bs-target="#exampleModal"
             role="link" style="float: right; margin-left: 15px; margin-right: 10px;"
             href="" onclick="deleteItem('{{obj}}', '{{obj.pk}}')">delete</a>
@@ -38,8 +39,13 @@
                   </div>
                 </div>
             </div>
+            {% endif %}
+            {% if groups.Edit_permission %}
             <a href="{% url 'Edit' kind=kind pk=obj.pk %}" style="float: right;">edit</a>
+            {% endif %}
+            {% if groups.View_permission %}
             <a href="{% url 'Full' kind=kind pk=obj.pk %}" style="float: right; margin-left: 15px; margin-right: 10px;">full details</a>
+            {% endif %}
         </li>
     {% endfor %} 
     {% else %}

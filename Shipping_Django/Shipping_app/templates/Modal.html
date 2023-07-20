@@ -7,17 +7,17 @@
     }
     </script>
     <body>
-      <div class="modal fade" id="onload" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"> <!-- Add this line to your code -->
+      <div class="modal fade" id="onload" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" data-bs-backdrop='static'> <!-- Add this line to your code -->
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">{{status}}</h5>
                 </div>
-                <div class="modal-body" style="color:black">
+                <div class="modal-body" style="color:black; white-space: pre-line" >
                     {{msg}}
                 </div>
                 <div class="modal-footer">
-                    {% if kind == 'Profile' %}
+                    {% if kind == 'Profile' or kind == 'Password' %}
                     <a type="link" class="btn btn-primary" href="{% url direct %}">Ok</a>
                     {% else %}
                     <a type="link" class="btn btn-primary" href="{% url direct kind=kind %}">Ok</a>

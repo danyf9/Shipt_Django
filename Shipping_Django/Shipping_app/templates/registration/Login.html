@@ -1,5 +1,6 @@
 {% extends 'Home.html' %}
 {% block content_block %}
+{% if not user.is_authenticated %}
 <form action="" style="color: white;" method="post">
     {% csrf_token %}
     {{form.as_p}}
@@ -7,5 +8,8 @@
 </form><br/>
 {% if request.path == '/Shipt/login' %}
 <p style="color: white;">Don't have an account ? signup <a href="{% url 'Signup' %}">here</a></p>
+{% endif %}
+{% else %}
+<h3 style="color: white; margin-left: 1rem;">You are already logged in</h3>
 {% endif %}
 {% endblock %}

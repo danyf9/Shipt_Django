@@ -71,7 +71,7 @@ class ItemAPI(APIView):
 
 # cache_page(time_in_seconds)
 # @method_decorator(cache_page(60), name='dispatch')
-class ItemPage(APIView):
+class ItemPageAPI(APIView):
     @classmethod
     def get(cls, request, page_num, page_size, category=None):
         items = []
@@ -134,6 +134,12 @@ class FilterAPI(APIView):
     @classmethod
     def post(cls, request, page_num, page_size):
         data = request.data['filters']
+        if not data['category'] and data['price'] == 0 and data['name'] == '':
+            return Response({
+                'lst': [],
+                'size': 0,
+                'categories': cache.get('categories')
+            })
         res = Categories.objects.none()
         current_place = page_num * page_size
         end_place = current_place + page_size
@@ -222,3 +228,13 @@ class AddCommentAPI(APIView):
                 return Response({'msg': str(e),
                                  'color': 'red'})
         return Response('')
+
+
+class HomePageItemsAPI(APIView):
+    @classmethod
+    def get(cls, request):
+        try:
+            res = ItemSerializer(Item.objects.filter()[Item.objects.count() - 3:Item.objects.count()], many=True)
+        except:
+            res = ItemSerializer(Item.objects.filter()[0:Item.objects.count()], many=True)
+        return Response(res.data)

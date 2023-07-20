@@ -31,6 +31,7 @@
       }
       </style>
       <script>
+
       </script>
 </head>
 <body style="background-color: black;display: table;">
@@ -42,17 +43,22 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
     {% if user.is_authenticated %}
+        {% if groups.View_permission or groups.Add_permission %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Items
           </a>
           <ul class="dropdown-menu">
+            {% if groups.View_permission %}
             <li><a class="dropdown-item" href="{%url 'List' kind='Item' %}">All items</a></li>
-            {% if user.is_superuser %}
+            {% endif %}
+            {% if groups.Add_permission %}
             <li><a class="dropdown-item" href="{%url 'Add' kind='Item' %}">Add item</a></li>
             {% endif %}
           </ul>
         </li>
+        {% endif %}
+        {% if groups.View_permission %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Shipments
@@ -61,15 +67,23 @@
             <li><a class="dropdown-item" href="{% url 'List' kind='Shipment' %}">All shipments</a></li>
           </ul>
         </li>
+        {% endif %}
+        {% if groups.View_permission or groups.Add_permission %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Categories
           </a>
           <ul class="dropdown-menu">
+            {% if groups.View_permission %}
             <li><a class="dropdown-item" href="{% url 'List' kind='Category' %}">All Categories</a></li>
+            {% endif %}
+            {% if groups.Add_permission %}
             <li><a class="dropdown-item" href="{% url 'Add' kind='Category' %}">Add to Category</a></li>
+            {% endif %}
           </ul>
         </li>
+        {% endif %}
+        {% if groups.Chat_permission %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Rooms
@@ -78,6 +92,8 @@
             <li><a class="dropdown-item" href="{% url 'List' kind='Room' %}">All Rooms</a></li>
           </ul>
         </li>
+        {% endif %}
+        {% if groups.Add_permission %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Images
@@ -86,8 +102,20 @@
             <li><a class="dropdown-item" href="{% url 'Add' kind='Image' %}">Add image</a></li>
           </ul>
         </li>
+        {% endif %}
+        {% if groups.User_permission %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Users
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'List' kind='User' %}">All users</a></li>
+            <li><a class="dropdown-item" href="{% url 'Add' kind='User' %}">Create new user</a></li>
+          </ul>
+        </li>
+        {% endif %}
        </ul>
-       {% if not action %}
+       {% if not action and groups.View_permission%}
       <form class="d-flex" role="search" method="post" 
       action="">
       {% csrf_token %}
@@ -99,11 +127,11 @@
       <li class="btn-group"
         style="color: white; list-style: none; margin-left: 10px; margin-bottom: 1%; margin-top: 1%;">
         <a class="nav-link dropdown-toggle" href="" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-          User
+          {{user.username}}
         </a>
         <ul class="dropdown-menu dropdown-menu-lg-end">
           <li><a class="dropdown-item" href="{% url 'Full' kind='Profile' pk=user.pk%}">Profile</a></li>
-          <li><a class="dropdown-item" href="{% url 'Edit' kind='Profile' pk=user.pk%}">Edit profile</a></li>
+          <li><a class="dropdown-item" href="{% url 'Edit' kind='Profile' pk=user.pk%}">Edit my profile</a></li>
           <li><a class="dropdown-item" href="{% url 'Edit' kind='Password' pk=user.pk%}">Reset password</a></li>
           <li><a class="dropdown-item" href="{% url 'Logout' %}" style="color: red;">Logout</a></li>
 
@@ -121,7 +149,7 @@
 <br><br><br><br>
     {% block content_block %}
     <h3 class="my-block" style="color: white;user-select: none;">Welcome {{user}} to
-        the Shipt database</h3>  
+        the Shipt database Manager</h3>  
     {% endblock %}
 </body>
 </html>
