@@ -46,6 +46,9 @@ class ShipmentList(models.Model):
     item = models.ForeignKey(to=Item, related_name="list_item",
                              on_delete=models.RESTRICT)
 
+    def __str__(self):
+        return f'{self.shipment}->{self.item}'
+
 
 class Categories(models.Model):
 
@@ -67,10 +70,9 @@ class Categories(models.Model):
 
 class Image(models.Model):
     item = models.ForeignKey(to=Item, related_name='Item_image', on_delete=models.CASCADE)
-    image = models.FileField(null=False, upload_to='items')
-    # image = models.CharField(max_length=50, null=True)
-    # status = models.CharField(max_length=10, null=False, choices=[
-    #     ('W', 'waiting'), ('C', 'Confirmed')])
+    image = models.CharField(max_length=50, null=True)
+    status = models.CharField(max_length=10, null=False, choices=[
+        ('W', 'Waiting'), ('C', 'Confirmed')], default='W')
 
     def __str__(self):
         return f"{self.item}, {self.image}"

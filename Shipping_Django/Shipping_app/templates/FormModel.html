@@ -7,8 +7,28 @@
             display: none;
         }
     </style>
+    {% if kind == 'Item' or kind == 'Image' %}
+    <script>
+    async function uploadImage(url) {
+        const response = await fetch(
+            url
+        , {
+        method: "PUT",
+        body: document.getElementById('id_image').files[0]
+        })
+        .catch(error => {
+        console.log("Error: ", error);})
+        document.getElementById('id_image').value = ''
+    }
+    </script>
+    {% endif %}
     <h3 style="color: white; margin-left: 20px;">{{action}} {{kind}}</h3>
-        <form method="post" style="color: white; margin-left: 50px; margin-right: 50px;" enctype="multipart/form-data">
+        <form method="post" style="color: white; margin-left: 50px; margin-right: 50px;" enctype="multipart/form-data"
+        {% if kind == 'Item' or kind == 'Image' %}
+        onsubmit="uploadImage('{{url}}')"
+        action="{% url 'Add' kind=kind %}?url={{url}}&"
+        {% endif %}
+        >
             {% csrf_token %}
             {% for form in forms %}
             {{ form | crispy }}

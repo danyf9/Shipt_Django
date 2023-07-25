@@ -23,6 +23,10 @@ try:
     Group(name='Chat_permission').save()
     Group(name='Add_permission').save()
     Group(name='Delete_permission').save()
+    Group(name='Item_permission').save()
+    Group(name='Shipment_permission').save()
+    Group(name='Category_permission').save()
+    Group(name='Image_permission').save()
     for group in Group.objects.all():
         try:
             user.groups.add(group)

@@ -1,12 +1,7 @@
     {% extends 'Home.html' %}
     {% load static %}
     {% block content_block %}
-    <script>
-        window.onload = (e)=>{
-            document.getElementById('img').src = 'http://'+ window.location.host + '/' + '{{obj_dict.Picture}}'
-        }
-    </script>
-    <img src="" alt='' id="img"
+    <img src="{{obj_dict.Picture}}" alt='' id="img"
     style="float: right; margin-right: 30px; max-height: 25rem; max-width: 25rem;">
     <h3 style="color: white; margin-left: 20px;">Full details</h3>
     <br>

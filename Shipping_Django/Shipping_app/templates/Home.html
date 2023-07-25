@@ -43,7 +43,7 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
     {% if user.is_authenticated %}
-        {% if groups.View_permission or groups.Add_permission %}
+        {% if groups.Item_permission %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Items
@@ -58,7 +58,7 @@
           </ul>
         </li>
         {% endif %}
-        {% if groups.View_permission %}
+        {% if groups.View_permission and groups.Shipment_permission %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Shipments
@@ -68,7 +68,7 @@
           </ul>
         </li>
         {% endif %}
-        {% if groups.View_permission or groups.Add_permission %}
+        {% if groups.Category_permission %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Categories
@@ -93,7 +93,7 @@
           </ul>
         </li>
         {% endif %}
-        {% if groups.Add_permission %}
+        {% if groups.Add_permission and groups.Image_permission %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Images
@@ -103,14 +103,18 @@
           </ul>
         </li>
         {% endif %}
-        {% if groups.User_permission %}
+        {% if groups.User_permission%}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Users
           </a>
           <ul class="dropdown-menu">
+            {% if groups.View_permission %}
             <li><a class="dropdown-item" href="{% url 'List' kind='User' %}">All users</a></li>
+            {% endif %}
+            {% if groups.Add_permission %}
             <li><a class="dropdown-item" href="{% url 'Add' kind='User' %}">Create new user</a></li>
+            {% endif %}
           </ul>
         </li>
         {% endif %}

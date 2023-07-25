@@ -42,10 +42,14 @@ class ItemCategoryForm(forms.ModelForm):
 
 class ImageForm(forms.ModelForm):
 
-    def __init__(self, *args, item=False, **kwargs):
+    def __init__(self, item=False, img_name='', *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not item:
             self.fields['item'].widget = forms.HiddenInput()
+        self.fields['status'].widget = forms.HiddenInput()
+        self.fields['image'] = forms.FileField()
+        self.fields['img_name'] = forms.CharField(widget=forms.HiddenInput, initial=img_name)
+
 
     class Meta:
         model = Image
@@ -98,3 +102,20 @@ class EditUserForm(forms.ModelForm):
                    'user_permissions', 'is_staff', 'password',
                    'is_active', 'date_joined']
         fields = '__all__'
+
+
+class GroupsForm(forms.Form):
+    def __init__(self, groups=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['user_permission'] = forms.BooleanField(widget=forms.CheckboxInput(), required=False)
+        self.fields['add_permission'] = forms.BooleanField(widget=forms.CheckboxInput(), required=False)
+        self.fields['edit_permission'] = forms.BooleanField(widget=forms.CheckboxInput(), required=False)
+        self.fields['delete_permission'] = forms.BooleanField(widget=forms.CheckboxInput(), required=False)
+        self.fields['view_permission'] = forms.BooleanField(widget=forms.CheckboxInput(), required=False)
+        self.fields['item_permission'] = forms.BooleanField(widget=forms.CheckboxInput(), required=False)
+        self.fields['shipment_permission'] = forms.BooleanField(widget=forms.CheckboxInput(), required=False)
+        self.fields['category_permission'] = forms.BooleanField(widget=forms.CheckboxInput(), required=False)
+        self.fields['chat_permission'] = forms.BooleanField(widget=forms.CheckboxInput(), required=False)
+        if groups is not None:
+            for field in self.fields:
+                self.fields[field].initial = groups[field.capitalize()]

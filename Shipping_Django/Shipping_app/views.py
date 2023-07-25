@@ -1,39 +1,52 @@
+import random
+import string
+import boto3
+from botocore.config import Config
 from django.contrib.auth import login
 from django.contrib.auth.models import User, Group
 from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.views import View
 from channels.layers import get_channel_layer
+from .passwords import ACCESS_KEY, SECRET_ACCESS_KEY, S3_URL
 
 from .models import Item, Shipment, Categories, Image
 from .forms import Search, ItemForm, EditShipment, \
-    FullSignup, ItemCategoryForm, ImageForm, EditUserForm
-
-
-# Create your views here.
+    FullSignup, ItemCategoryForm, ImageForm, EditUserForm, GroupsForm
 
 
 def search_all(var, request):
-    item_list = Item.objects.filter(
-        Q(id__contains=var) |
-        Q(name__contains=var) |
-        Q(description__contains=var) |
-        Q(description__contains=var) |
-        Q(price__contains=var)
-    )
-    shipment_list = Shipment.objects.filter(
-        Q(id__contains=var) |
-        Q(order_date__contains=var)
-    )
-    if Group.objects.get(name='User_permission') in request.user.groups.all():
-        user_list = User.objects.filter(
-            Q(username__contains=var) |
-            Q(first_name__contains=var) |
-            Q(last_name__contains=var) |
-            Q(email__contains=var)
-        )
+    group = groups(request.user)
+    if group['View_permission']:
+        if group['Item_permission']:
+            item_list = Item.objects.filter(
+                Q(id__contains=var) |
+                Q(name__contains=var) |
+                Q(description__contains=var) |
+                Q(description__contains=var) |
+                Q(price__contains=var)
+            )
+        else:
+            item_list = {}
+        if group['Shipment_permission']:
+            shipment_list = Shipment.objects.filter(
+                Q(id__contains=var) |
+                Q(user__contains=var) |
+                Q(order_date__contains=var)
+            )
+        else:
+            shipment_list = {}
+        if group['User_permission']:
+            user_list = User.objects.filter(
+                Q(username__contains=var) |
+                Q(first_name__contains=var) |
+                Q(last_name__contains=var) |
+                Q(email__contains=var)
+            )
+        else:
+            user_list = {}
     else:
-        user_list = {}
+        item_list = shipment_list = user_list = {}
     return {'items': item_list, 'shipments': shipment_list, 'users': user_list}
 
 
@@ -46,15 +59,39 @@ def get_items(category):
     return obj_lst[{lst[1]: lst[0] for lst in Categories.categories}[category]]
 
 
-def groups(request):
-    return {group.name: (group in request.user.groups.all()) for group in Group.objects.all()}
+def groups(user):
+    return {group.name: (group in user.groups.all()) for group in Group.objects.all()}
+
+
+def s3_url():
+    s3_client = boto3.client('s3', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_ACCESS_KEY,
+                             region_name='eu-north-1', config=Config(signature_version='s3v4'))
+    rand_id = "".join(
+        random.SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in
+        range(20))
+    return {'url': s3_client.generate_presigned_url(
+        ClientMethod='put_object',
+        Params={
+            'Bucket': 'shiptbucket',
+            'Key': f'items/'
+                   f'{rand_id}.png',
+        },
+        ExpiresIn=(60 * 60)
+    ), 'id': rand_id}
+
+
+def s3_delete(img_list):
+    s3_client = boto3.client('s3', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_ACCESS_KEY,
+                             region_name='eu-north-1', config=Config(signature_version='s3v4'))
+    for img in img_list:
+        s3_client.delete_object(Bucket='shiptbucket', Key=f'items/{img.image}')
 
 
 class Home(View):
     @classmethod
     def get(cls, request):
         return render(request=request, template_name='Home.html',
-                      context={'groups': groups(request)})
+                      context={'groups': groups(request.user)})
 
     @classmethod
     def post(cls, request):
@@ -65,7 +102,7 @@ class SearchView(View):
     @classmethod
     def get(cls, request, var):
         return render(request=request, template_name='Search.html',
-                      context=dict(search_all(var, request), groups=groups(request)))
+                      context=dict(search_all(var, request), groups=groups(request.user)))
 
     @classmethod
     def post(cls, request, var):
@@ -98,44 +135,71 @@ class List(View):
 
         return render(request=request, template_name='List.html',
                       context={'obj_list': obj_lst,
-                               'kind': kind, 'groups': groups(request)})
+                               'kind': kind, 'groups': groups(request.user)})
 
     @classmethod
     def post(cls, request, kind):
         data = Search(data=request.POST).data.dict()
         return render(request=request, template_name='Search.html',
-                      context=dict(search_all(data['Var'], request), groups=groups(request)))
+                      context=dict(search_all(data['Var'], request), groups=groups(request.user)))
 
 
 class Add(View):
 
     @classmethod
     def get(cls, request, kind):
-        forms = ''
-        permission = Group.objects.get(name='Add_permission') in request.user.groups.all()
+        forms = url = img_name = ''
+        group = groups(request.user)
+        permission = group['Add_permission'] and (
+            (kind == 'Item' and group['Item_permission']) or
+            (kind == 'Category' and group['Category_permission']) or
+            (kind == 'Image' and group['Image_permission']) or
+            (kind == 'User' and group['User_permission']) or
+            (kind == 'Shipment' and group['Shipment_permission'])
+
+        )
+        if not permission:
+            return render(request=request, template_name='Modal.html',
+                          context={'direct': 'Home', 'kind': 'Profile', 'msg': 'permission denied',
+                                   'status': 'Permission denied'})
 
         if kind == 'Item':
-            forms = [ItemForm(action='Add'), ImageForm]
+            ps = s3_url()
+            url = ps['url']
+            img_name = ps['id']
+            forms = [ItemForm(action='Add'), ImageForm(img_name=img_name)]
         elif kind == 'Category':
             forms = [ItemCategoryForm]
         elif kind == 'Image':
-            forms = [ImageForm(item=True)]
+            ps = s3_url()
+            url = ps['url']
+            img_name = ps['id']
+            forms = [ImageForm(item=True, img_name=img_name)]
         elif kind == 'User':
-            forms = [FullSignup]
+            forms = [FullSignup, GroupsForm]
 
         return render(request=request, template_name='FormModel.html',
                       context={'kind': kind, 'action': 'Add', 'forms': forms,
-                               'permission': permission, 'groups': groups(request)})
+                               'permission': permission, 'groups': groups(request.user), 'url': url,
+                               'img_name': img_name})
 
     @classmethod
     def post(cls, request, kind):
         form, msg, status = '', '', ''
-        permission = Group.objects.get(name='Add_permission') in request.user.groups.all()
+        group = groups(request.user)
+        permission = group['Add_permission'] and (
+                (kind == 'Item' and group['Item_permission']) or
+                (kind == 'Category' and group['Category_permission']) or
+                (kind == 'Image' and group['Image_permission']) or
+                (kind == 'User' and group['User_permission']) or
+                (kind == 'Shipment' and group['Shipment_permission'])
 
+        )
         if not permission:
             return render(request=request, template_name='Modal.html',
-                          context={'direct': 'List', 'kind': kind, 'msg': 'permission denied',
+                          context={'direct': 'Home', 'kind': 'Profile', 'msg': 'permission denied',
                                    'status': 'Permission denied'})
+
         elif kind == 'Item':
             form = ItemForm(data=request.POST, action='Add')
         elif kind == 'Category':
@@ -143,9 +207,11 @@ class Add(View):
         elif kind == 'Image':
             form = ImageForm(instance=Image(
                 item=Item.objects.get(pk=request.POST['item']),
-                image=request.FILES['image']), item=True)
+                image=f"{request.POST['img_name']}.png", status='C'), item=True)
         elif kind == 'User':
             form = FullSignup(data=request.POST)
+            form.instance.is_staff = True
+
         if form.is_valid():
             try:
                 form.save()
@@ -156,27 +222,38 @@ class Add(View):
                         item=Item.objects.get(pk=form.instance.pk),
                         category=form.cleaned_data['category']
                     ).save()
-                    request.FILES['image'].name = f"{form.instance.id}.jpg"
                     Image(
                         item=Item.objects.get(pk=form.instance.pk),
-                        image=request.FILES['image']
+                        image=f"{request.POST['img_name']}.png",
+                        status='C'
                     ).save()
             except Exception as e:
                 msg = f'Error: {e}'
                 status = 'Error'
         elif kind == 'Image':
-            request.FILES['image'].name = f"{form.instance.item.id}.jpg"
+            Image(
+                item=Item.objects.get(pk=request.POST['item']),
+                image=f"{request.POST['name'][0]}.png", status='C'
+            )
             form.instance.save()
             msg = f'Image added successfully'
             status = 'Success'
             kind = 'Item'
         else:
             return render(request=request, template_name='FormModel.html',
-                          context={'forms': [form], 'kind': kind, 'action': 'Add', 'groups': groups(request)})
+                          context={'forms': [form], 'kind': kind, 'action': 'Add', 'groups': groups(request.user),
+                                   'permission': permission})
+
+        if kind == 'User':
+            groups_form = dict(GroupsForm(data=request.POST).data)
+            for field in groups_form.keys():
+                if 'permission' in field:
+                    User.objects.get(username=form.instance.username).groups.add(
+                        Group.objects.get(name=field.capitalize()))
 
         return render(request=request, template_name='Modal.html',
                       context={'direct': 'List', 'kind': kind, 'msg': msg,
-                               'status': status})
+                               'status': status, 'pk': form.instance.id})
 
 
 class Full(View):
@@ -184,6 +261,19 @@ class Full(View):
     @classmethod
     def get(cls, request, kind, pk):
         obj_dict = {}
+        group = groups(request.user)
+        permission = group['View_permission'] and (
+                (kind == 'Item' and group['Item_permission']) or
+                (kind == 'Category' and group['Category_permission']) or
+                (kind == 'Image' and group['Image_permission']) or
+                (kind == 'User' and group['User_permission']) or
+                (kind == 'Shipment' and group['Shipment_permission'])
+
+        )
+        if not permission:
+            return render(request=request, template_name='Modal.html',
+                          context={'direct': 'Home', 'kind': 'Profile', 'msg': 'permission denied',
+                                   'status': 'Permission denied'})
         if kind == 'Item':
             obj = Item.objects.get(pk=pk)
             l1 = []
@@ -193,7 +283,7 @@ class Full(View):
 
             obj_dict = {'ID': obj.pk, 'Name': obj.name, 'Description': obj.description,
                         'Price': obj.price,
-                        'Categories': l1, 'Picture': f"API/media/{obj.Item_image.filter()[0].image}"}
+                        'Categories': l1, 'Picture': f"{S3_URL}/{obj.Item_image.filter()[0].image}"}
         elif kind == 'Shipment':
             obj = Shipment.objects.get(pk=pk)
             obj_dict = {'ID': obj.pk, 'Date': obj.order_date, 'User': obj.user.username,
@@ -207,7 +297,7 @@ class Full(View):
             obj_dict = {'Username': obj.username, 'Full Name': obj.get_full_name(), 'email': obj.email}
 
         return render(request=request, template_name='Full_details.html',
-                      context={'obj_dict': obj_dict, 'groups': groups(request)})
+                      context={'obj_dict': obj_dict, 'groups': groups(request.user)})
 
     @classmethod
     def post(cls, request, kind, pk):
@@ -219,36 +309,56 @@ class Edit(View):
     @classmethod
     def get(cls, request, kind, pk):
         forms = ''
-        permission = Group.objects.get(name='Edit_permission') in request.user.groups.all()
+        group = groups(request.user)
+        permission = group['Edit_permission'] and (
+                (kind == 'Item' and group['Item_permission']) or
+                (kind == 'Category' and group['Category_permission']) or
+                (kind == 'Image' and group['Image_permission']) or
+                (kind == 'User' and group['User_permission']) or
+                (kind == 'Shipment' and group['Shipment_permission'])
 
+        ) and request.user.username != User.objects.get(pk=pk).username
+        if not permission:
+            return render(request=request, template_name='Modal.html',
+                          context={'direct': 'Home', 'kind': 'Profile', 'msg': 'permission denied',
+                                   'status': 'Permission denied'})
         if kind == 'Item':
             forms = [ItemForm(instance=Item.objects.get(id=pk), action='Edit')]
         elif kind == 'Shipment':
             forms = [EditShipment(instance=Shipment.objects.get(id=pk))]
         elif kind == 'Profile':
             forms = [EditUserForm(instance=User.objects.get(id=pk),
-                                  email=Group.objects.get(name='User_permission') in request.user.groups.all(),
+                                  email=group['User_permission'],
                                   kind=kind)]
-            permission = True
         elif kind == 'Password':
-            permission = Group.objects.get(name='User_permission') in request.user.groups.all() or request.user.pk == pk
             forms = [EditUserForm(instance=User.objects.get(id=pk), kind='Password',
-                     edit_user=not Group.objects.get(name='User_permission') in request.user.groups.all())]
+                                  edit_user=not group['User_permission'])]
         elif kind == 'Category':
             forms = [ItemCategoryForm(instance=Categories)]
         elif kind == 'User':
-            forms = [EditUserForm(instance=User.objects.get(pk=pk), kind=kind)]
+            forms = [EditUserForm(instance=User.objects.get(pk=pk), kind=kind),
+                     GroupsForm(groups=groups(User.objects.get(pk=pk)))]
         return render(request=request, template_name='FormModel.html',
                       context={'forms': forms, 'kind': kind, 'pk': pk, 'action': 'Edit',
-                               'permission': permission, 'groups': groups(request)})
+                               'permission': permission, 'groups': groups(request.user)})
 
     @classmethod
     def post(cls, request, kind, pk):
         form = msg = status = ''
         direct = 'List'
-        permission = Group.objects.get(name='Edit_permission') in request.user.groups.all() \
-                     or kind == 'Password' and (request.user.pk == pk or
-                                                Group.objects.get(name='User_permission') in request.user.groups.all())
+        group = groups(request.user)
+        permission = group['Edit_permission'] and (
+                (kind == 'Item' and group['Item_permission']) or
+                (kind == 'Category' and group['Category_permission']) or
+                (kind == 'Image' and group['Image_permission']) or
+                (kind == 'User' and group['User_permission']) or
+                (kind == 'Shipment' and group['Shipment_permission'])
+
+        )
+        if not permission:
+            return render(request=request, template_name='Modal.html',
+                          context={'direct': 'Home', 'kind': 'Profile', 'msg': 'permission denied',
+                                   'status': 'Permission denied'})
 
         if not permission:
             return render(request=request, template_name='Modal.html',
@@ -262,7 +372,7 @@ class Edit(View):
             form = ItemCategoryForm(data=request.POST, instance=Categories.objects.get(pk=pk))
         elif kind == 'Profile':
             form = EditUserForm(data=request.POST, instance=request.user,
-                                email=Group.objects.get(name='User_permission') in request.user.groups.all())
+                                email=group['User_permission'])
         elif kind == 'Password':
             form = EditUserForm(data=request.POST, instance=User.objects.get(id=pk))
             if form.data['new_password1'] == form.data['new_password2'] \
@@ -291,7 +401,16 @@ class Edit(View):
         else:
             return render(request=request, template_name='FormModel.html',
                           context={'forms': [form], 'kind': kind, 'pk': pk, 'action': 'Edit',
-                                   'permission': permission, 'groups': groups(request)})
+                                   'permission': permission, 'groups': groups(request.user)})
+
+        if kind == 'User':
+            groups_form = dict(GroupsForm(data=request.POST).data)
+            user = User.objects.get(username=form.instance.username)
+            user.groups.clear()
+            for field in groups_form.keys():
+                if 'permission' in field:
+                    user.groups.add(
+                        Group.objects.get(name=field.capitalize()))
 
         if kind == 'Profile' or kind == 'Password':
             login(request=request, user=form.instance)
@@ -306,9 +425,23 @@ class Delete(View):
     @classmethod
     def get(cls, request, kind, pk):
         obj = ''
+        group = groups(request.user)
+        permission = group['Delete_permission'] and (
+                (kind == 'Item' and group['Item_permission']) or
+                (kind == 'Category' and group['Category_permission']) or
+                (kind == 'Image' and group['Image_permission']) or
+                (kind == 'User' and group['User_permission']) or
+                (kind == 'Shipment' and group['Shipment_permission'])
+
+        )
+        if not permission:
+            return render(request=request, template_name='Modal.html',
+                          context={'direct': 'Home', 'kind': 'Profile', 'msg': 'permission denied',
+                                   'status': 'Permission denied'})
         if kind == 'Item':
             obj = Item.objects.get(pk=pk)
-            obj.Item_image.get().image.delete(save=False)
+            s3_delete(obj.Item_image.all())
+
         elif kind == 'Shipment':
             obj = Shipment.objects.get(pk=pk)
         elif kind == 'Category':
