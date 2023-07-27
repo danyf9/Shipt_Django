@@ -124,9 +124,9 @@ class ItemImageAPI(APIView):
     def post(cls, request, num=None):
         data = request.data['data']
         if num is None:
-            res = [f"media/{image.image.name}" for image in Item.objects.get(pk=data).Item_image.all()]
+            res = [f"items/{image.image}" for image in Item.objects.get(pk=data).Item_image.all()]
         else:
-            res = f"media/{Item.objects.get(pk=data).Item_image.all()[num].image.name}"
+            res = f"items/{Item.objects.get(pk=data).Item_image.all()[num].image}"
         return Response(res)
 
 

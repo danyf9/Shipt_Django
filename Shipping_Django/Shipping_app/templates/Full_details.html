@@ -1,8 +1,8 @@
     {% extends 'Home.html' %}
     {% load static %}
     {% block content_block %}
-    <img src="{{obj_dict.Picture}}" alt='' id="img"
-    style="float: right; margin-right: 30px; max-height: 25rem; max-width: 25rem;">
+    <img src="{{obj_dict.Picture}}" alt='No pictures found' id="img"
+    style="float: right; margin-right: 30px; max-height: 25rem; max-width: 25rem; color: white;">
     <h3 style="color: white; margin-left: 20px;">Full details</h3>
     <br>
     <div style="margin-left: 30px;">
@@ -17,7 +17,7 @@
     {% if key != 'Picture' and key != 'sitems' %}
     <p style="color:white; margin-right: 0rem;">{{key}} : {{value}}</p>
     {% else %}
-    {% if key == 'sitems' %}
+    {% if key == 'shipment_items' %}
     <h5 style="color: white;"> Item list: </h5>
     <ol style="list-style-position: inside; padding-right: 30px;">
     {% for item in obj_dict.sitems %}
@@ -30,5 +30,10 @@
     {% endif %}
     {% endif %}
     {% endfor %}
+    {% if kind == 'Item' and obj_dict.Picture != '' %}
+    <br/>
+    <br/>
+    <a href="{% url 'Delete' kind='Image' pk=obj_dict.ID %}">Delete all pictures</a>
+    {% endif %}
     </div>
     {% endblock %}
