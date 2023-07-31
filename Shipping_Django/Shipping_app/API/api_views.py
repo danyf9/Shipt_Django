@@ -1,9 +1,10 @@
 from django.core.cache import cache
+from django.db.models import Q
 from django.views.decorators.cache import cache_page
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import ItemSerializer, CommentSerializer
-from ..models import Item, Categories, Shipment, ShipmentList, Comment
+from ..models import Item, Categories, Shipment, ShipmentList, Comment, WishList
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from django.utils.decorators import method_decorator
@@ -38,39 +39,17 @@ class GetUserWithToken(APIView):
 
 class ItemAPI(APIView):
     @classmethod
-    def get(cls, request, action=None):
-        if action is None:
-            try:
-                item_id = request.query_params.get('item_id')
-                if item_id is None:
-                    return Response(ItemSerializer(Item.objects.all(), many=True).data)
-                else:
-                    return Response(ItemSerializer(Item.objects.get(pk=item_id)).data)
-            except Exception as e:
-                return Response(f"Error: {e}")
-        else:
-            return Response(f"Cannot use the '{action}' action with the current method."
-                            f" try removing the '/{action}'")
-
-    @classmethod
-    def post(cls, request, action=None):
-        if action == "add":
-            try:
-                item = ItemSerializer(data=request.data)
-                if item.is_valid():
-                    item.save()
-                    return Response("Item saved successfully")
-                else:
-                    return Response({"Error": item.errors})
-            except Exception as e:
-                return Response(f"Unknown error: {e}")
-        else:
-            return Response(f"Cannot use the '{action}' action with the current method."
-                            f" try replacing the '/{action}' with '/add'")
+    def get(cls, request):
+        try:
+            item_id = request.query_params.get('item_id')
+            if item_id is None:
+                return Response(ItemSerializer(Item.objects.all(), many=True).data)
+            else:
+                return Response(ItemSerializer(Item.objects.get(pk=item_id)).data)
+        except Exception as e:
+            return Response(f"Error: {e}")
 
 
-# cache_page(time_in_seconds)
-# @method_decorator(cache_page(60), name='dispatch')
 class ItemPageAPI(APIView):
     @classmethod
     def get(cls, request, page_num, page_size, category=None):
@@ -238,3 +217,42 @@ class HomePageItemsAPI(APIView):
         except:
             res = ItemSerializer(Item.objects.filter()[0:Item.objects.count()], many=True)
         return Response(res.data)
+
+
+class WishListAPI(APIView):
+    @classmethod
+    def get(cls, request, username, item_id):
+        if User.objects.filter(username=username):
+            return Response(bool(WishList.objects.filter(user__username=username, item__id=item_id)))
+
+    @classmethod
+    def post(cls, request, username, item_id):
+        if User.objects.filter(username=username):
+            wl = WishList.objects.filter(user__username=username, item__id=item_id)
+            if wl and request.data['data']:
+                wl.delete()
+            else:
+                WishList(user=User.objects.get(username=username), item=Item.objects.get(id=item_id)).save()
+            return Response(bool(WishList.objects.filter(user__username=username, item__id=item_id)))
+
+
+class SearchAPI(APIView):
+    @classmethod
+    def post(cls, request, page_num, page_size):
+        data = request.data['param']
+        if data:
+            current_place = page_num * page_size
+            end_place = current_place + page_size
+
+            items = ItemSerializer(Item.objects.filter(
+                Q(name__contains=data) |
+                Q(description__contains=data)
+            ), many=True).data
+            return Response(
+                {
+                    'lst': items,
+                    'size': len(items),
+                }
+            )
+        else:
+            return Response()

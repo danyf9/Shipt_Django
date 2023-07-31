@@ -23,7 +23,6 @@ def search_all(var, request):
                 Q(id__contains=var) |
                 Q(name__contains=var) |
                 Q(description__contains=var) |
-                Q(description__contains=var) |
                 Q(price__contains=var)
             )
         else:
@@ -64,13 +63,10 @@ def groups(user):
 
 
 def permissions(user, kind, action):
-    group = groups(user)
-    return group[f'{action}_permission'] and (
-            (kind == 'Item' and group['Item_permission']) or
-            (kind == 'Category' and group['Category_permission']) or
-            (kind == 'Image' and group['Image_permission']) or
-            (kind == 'User' and group['User_permission']) or
-            (kind == 'Shipment' and group['Shipment_permission']))
+    if kind != 'Profile' and kind != 'Password':
+        group = groups(user)
+        return group[f'{action}_permission'] and (group[f'{kind}_permission'])
+    return True
 
 
 def s3_url():
@@ -180,7 +176,7 @@ class Add(View):
         elif kind == 'User':
             forms = [FullSignup, GroupsForm]
 
-        return render(request=request, template_name='FormModel.html',
+        return render(request=request, template_name='Form.html',
                       context={'kind': kind, 'action': 'Add', 'forms': forms,
                                'permission': permission, 'groups': groups(request.user), 'url': url,
                                'img_name': img_name})
@@ -235,7 +231,7 @@ class Add(View):
             status = 'Success'
             kind = 'Item'
         else:
-            return render(request=request, template_name='FormModel.html',
+            return render(request=request, template_name='Form.html',
                           context={'forms': [form], 'kind': kind, 'action': 'Add', 'groups': groups(request.user),
                                    'permission': permission})
 
@@ -302,8 +298,7 @@ class Edit(View):
     @classmethod
     def get(cls, request, kind, pk):
         forms = ''
-        permission = permissions(request.user, kind, 'Add') and \
-            request.user.username != User.objects.get(pk=pk).username
+        permission = permissions(request.user, kind, 'Add')
 
         if not permission:
             return render(request=request, template_name='Modal.html',
@@ -318,14 +313,13 @@ class Edit(View):
                                   email=groups(request.user)['User_permission'],
                                   kind=kind)]
         elif kind == 'Password':
-            forms = [EditUserForm(instance=User.objects.get(id=pk), kind='Password',
-                                  edit_user=not groups(request.user)['User_permission'])]
+            forms = [EditUserForm(instance=User.objects.get(id=pk), kind='Password')]
         elif kind == 'Category':
             forms = [ItemCategoryForm(instance=Categories)]
         elif kind == 'User':
             forms = [EditUserForm(instance=User.objects.get(pk=pk), kind=kind),
                      GroupsForm(groups=groups(User.objects.get(pk=pk)))]
-        return render(request=request, template_name='FormModel.html',
+        return render(request=request, template_name='Form.html',
                       context={'forms': forms, 'kind': kind, 'pk': pk, 'action': 'Edit',
                                'permission': permission, 'groups': groups(request.user)})
 
@@ -379,7 +373,7 @@ class Edit(View):
                 msg = f'Error: {e}'
                 status = 'Error'
         else:
-            return render(request=request, template_name='FormModel.html',
+            return render(request=request, template_name='Form.html',
                           context={'forms': [form], 'kind': kind, 'pk': pk, 'action': 'Edit',
                                    'permission': permission, 'groups': groups(request.user)})
 
@@ -460,4 +454,5 @@ class SignupView(View):
 class WS(View):
     @classmethod
     def get(cls, request):
-        return render(request=request, template_name='chat/Channel.html')
+        return render(request=request, template_name='chat/Channel.html',
+                      context={'groups': groups(request.user)})

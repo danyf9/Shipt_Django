@@ -40,7 +40,7 @@
             {% endfor %}
         </form>
         <!-- very important!! do not put the url directly into the fetch as it fails to upload the image -->
-        <button onclick="submit('{{url}}')">submit</button>
+        <button onclick="submit('{{url}}')" style="border: 0rem; border-radius: 0.2rem; margin: 0.7rem 0rem 1rem 3rem">submit</button>
         {% else %}
         <h3 style="color: white; margin-left: 1rem;">Permission denied</h3>
         {% endif %}

@@ -57,7 +57,6 @@ class MyConsumer(WebsocketConsumer):
                 'type': 'global_handler',  # this is a function
             }
         )
-        print(text_data)
 
     def global_handler(self, event):
         """ This function will be run by each channel """
@@ -66,6 +65,13 @@ class MyConsumer(WebsocketConsumer):
             {'message': event['message']}))
 
     def disconnect(self, code):
+        async_to_sync(self.channel_layer.group_send)(
+            self.group_name, {
+                'message': f'{self.user_name} left the chat',
+                'type': 'global_handler',  # this is a function
+            }
+        )
+
         async_to_sync(self.channel_layer.group_discard)(
             self.group_name,
             self.channel_name

@@ -50,7 +50,6 @@ class ImageForm(forms.ModelForm):
         self.fields['image'] = forms.FileField()
         self.fields['img_name'] = forms.CharField(widget=forms.HiddenInput, initial=img_name)
 
-
     class Meta:
         model = Image
         fields = '__all__'
@@ -75,7 +74,7 @@ class FullSignup(UserCreationForm):
 
 class EditUserForm(forms.ModelForm):
 
-    def __init__(self, email=False, kind='', edit_user=True, *args, **kwargs):
+    def __init__(self, email=False, kind='', *args, **kwargs):
         super().__init__(*args, **kwargs)
         if kind != 'Profile' and kind != 'User':
             self.fields['first_name'].widget = forms.HiddenInput()
@@ -83,11 +82,13 @@ class EditUserForm(forms.ModelForm):
         if not email:
             self.fields['email'].widget = forms.HiddenInput()
         if kind == 'Password':
-            self.fields['username'] = forms.ModelChoiceField(disabled=edit_user, initial=self.instance.username,
-                                                             queryset=User.objects.all())
+            self.fields['username'] = forms.ModelChoiceField(
+                disabled=True, initial=self.instance,
+                queryset=User.objects.filter(username=self.instance.username))
             self.fields['old_password'] = forms.CharField(widget=forms.PasswordInput, label='Old password')
             self.fields['new_password1'] = forms.CharField(widget=forms.PasswordInput, label='New password')
-            self.fields['new_password2'] = forms.CharField(widget=forms.PasswordInput, label='New password confirmation')
+            self.fields['new_password2'] = forms.CharField(widget=forms.PasswordInput,
+                                                           label='New password confirmation')
         if kind == 'User':
             self.fields['username'] = forms.CharField(initial=self.instance.username)
             self.fields['first_name'] = forms.CharField(initial=self.instance.first_name)
@@ -98,7 +99,7 @@ class EditUserForm(forms.ModelForm):
 
     class Meta:
         model = User
-        exclude = ['last_login', 'is_superuser', 'groups','username',
+        exclude = ['last_login', 'is_superuser', 'groups', 'username',
                    'user_permissions', 'is_staff', 'password',
                    'is_active', 'date_joined']
         fields = '__all__'
@@ -119,3 +120,4 @@ class GroupsForm(forms.Form):
         if groups is not None:
             for field in self.fields:
                 self.fields[field].initial = groups[field.capitalize()]
+        self.order_fields(field_order=['add_permission', 'edit_permission', 'delete_permission', 'view_permission'])

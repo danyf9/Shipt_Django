@@ -20,9 +20,9 @@
           }
 
           rootElem.appendChild(newElem);
+          window.scrollTo(0, document.body.scrollHeight);
       }
-        document.getElementById("input")
-        .addEventListener("keypress", function(event) {
+        document.getElementById("input").addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
         event.preventDefault();
         document.getElementById("btn").click();
@@ -31,9 +31,10 @@
     })}
 
       function send(data) {
+        if(document.querySelector('#input').value !== ''){
         socketClient.send(JSON.stringify({ message: data }));
         document.querySelector('#input').value = ''
-      }
+      }}
 
     var input = document.getElementById("input");
     input.addEventListener("keypress", function(event) {
@@ -42,13 +43,20 @@
     document.getElementById("btn").click();
   }
     })
+    
+      function disconnect(params) {
+        socketClient.close()
+      }
     </script>
   </head>
-  <body onload="connect()">
+  <body onload="connect()" onunload="disconnect()">
     <h3 id="room" style="color: white;"></h3>
 
-    <input id="input"/><br/>
-    <button onclick="send(document.querySelector('#input').value)" id="btn">Send</button>
-    <div id="root" style="color: white;"></div>
+    <div id="root" style="color: white; margin-bottom: 4rem;"></div>
+
+    <input id="input" style="position: fixed; bottom: 0; width: 90%; padding-bottom: 1rem;"/>
+    <button onclick="send(document.querySelector('#input').value)" id="btn"
+    style="position: fixed; bottom: 0; right:0; width: 10%; height: 2.8rem;"
+    >Send</button>
   </body>
 {% endblock %}
