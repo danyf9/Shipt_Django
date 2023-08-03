@@ -1,6 +1,7 @@
 import random
 import string
 import boto3
+import os
 from botocore.config import Config
 from django.contrib.auth import login
 from django.contrib.auth.models import User, Group
@@ -8,7 +9,6 @@ from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.views import View
 from channels.layers import get_channel_layer
-from Shipping_Django.passwords import ACCESS_KEY, SECRET_ACCESS_KEY, S3_URL
 
 from .models import Item, Shipment, Categories, Image
 from .forms import Search, ItemForm, EditShipment, \
@@ -30,7 +30,7 @@ def search_all(var, request):
         if group['Shipment_permission']:
             shipment_list = Shipment.objects.filter(
                 Q(id__contains=var) |
-                Q(user__contains=var) |
+                Q(user__username__contains=var) |
                 Q(order_date__contains=var)
             )
         else:
@@ -70,11 +70,13 @@ def permissions(user, kind, action):
 
 
 def s3_url():
-    s3_client = boto3.client('s3', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_ACCESS_KEY,
+    s3_client = boto3.client('s3', aws_access_key_id=os.environ.get('ACCESS_KEY'),
+                             aws_secret_access_key=os.environ.get('SECRET_ACCESS_KEY'),
                              region_name='eu-north-1', config=Config(signature_version='s3v4'))
     rand_id = "".join(
         random.SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in
         range(20))
+    Image(image=f"{rand_id}.png", status='W').save()
     return {'url': s3_client.generate_presigned_url(
         ClientMethod='put_object',
         Params={
@@ -86,7 +88,8 @@ def s3_url():
 
 
 def s3_delete(img_list):
-    s3_client = boto3.client('s3', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_ACCESS_KEY,
+    s3_client = boto3.client('s3', aws_access_key_id=os.environ.get('ACCESS_KEY'),
+                             aws_secret_access_key=os.environ.get('SECRET_ACCESS_KEY'),
                              region_name='eu-north-1', config=Config(signature_version='s3v4'))
     for img in img_list:
         s3_client.delete_object(Bucket='shiptbucket', Key=f'items/{img.image}')
@@ -213,20 +216,18 @@ class Add(View):
                         item=Item.objects.get(pk=form.instance.pk),
                         category=form.cleaned_data['category']
                     ).save()
-                    Image(
-                        item=Item.objects.get(pk=form.instance.pk),
-                        image=f"{request.POST['img_name']}.png",
-                        status='C'
-                    ).save()
+                    img = Image.objects.get(image=f"{request.POST['img_name']}.png", status='W')
+                    img.item = form.instance
+                    img.status = 'C'
+                    img.save()
             except Exception as e:
                 msg = f'Error: {e}'
                 status = 'Error'
         elif kind == 'Image':
-            Image(
-                item=Item.objects.get(pk=request.POST['item']),
-                image=f"{request.POST['img_name']}.png", status='C'
-            ).save()
-            form.instance.save()
+            img = Image.objects.get(image=f"{request.POST['img_name']}.png", status='W')
+            img.item = form.instance.item
+            img.status = 'C'
+            img.save()
             msg = f'Image added successfully'
             status = 'Success'
             kind = 'Item'
@@ -269,7 +270,7 @@ class Full(View):
                         'Price': obj.price,
                         'Categories': l1}
             try:
-                obj_dict = dict(obj_dict, Picture=f"{S3_URL}/{obj.Item_image.filter()[0].image}")
+                obj_dict = dict(obj_dict, Picture=f"{os.environ.get('S3_URL')}/{obj.Item_image.filter()[0].image}")
             except Exception as e:
                 obj_dict = dict(obj_dict, Picture="")
 

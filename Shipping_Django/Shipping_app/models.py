@@ -69,7 +69,7 @@ class Categories(models.Model):
 
 
 class Image(models.Model):
-    item = models.ForeignKey(to=Item, related_name='Item_image', on_delete=models.CASCADE)
+    item = models.ForeignKey(to=Item, related_name='Item_image', on_delete=models.CASCADE, null=True)
     image = models.CharField(max_length=50, null=True)
     status = models.CharField(max_length=10, null=False, choices=[
         ('W', 'Waiting'), ('C', 'Confirmed')], default='W')

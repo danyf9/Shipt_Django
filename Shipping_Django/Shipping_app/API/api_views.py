@@ -3,7 +3,7 @@ from django.db.models import Q
 from django.views.decorators.cache import cache_page
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import ItemSerializer, CommentSerializer
+from .serializers import ItemSerializer, CommentSerializer, ShipmentSerializer
 from ..models import Item, Categories, Shipment, ShipmentList, Comment, WishList
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
@@ -18,12 +18,16 @@ class UserCreation(APIView):
             username = request.data.get("username")
             password = request.data.get("password")
             email = request.data.get("email", None)
+            first_name = request.data.get('first_name')
+            last_name = request.data.get('last_name')
 
             user = User.objects.create_user(username=username,
-                                            password=password, email=email)
+                                            password=password,
+                                            email=email,
+                                            first_name=first_name,
+                                            last_name=last_name)
             token = Token.objects.create(user=user)
             return Response({"status": "success",
-                             "msg": f"new user created. id: {user.id}",
                              "token": str(token)})
         except Exception as e:
             return Response({"status": "failed", "msg": f"Error:{e}"})
@@ -47,12 +51,18 @@ class ItemAPI(APIView):
             else:
                 return Response(ItemSerializer(Item.objects.get(pk=item_id)).data)
         except Exception as e:
-            return Response(f"Error: {e}")
+            return Response({'error': f"Error: {e}"})
 
 
-class ItemPageAPI(APIView):
+class ItemListAPI(APIView):
     @classmethod
     def get(cls, request, page_num, page_size, category=None):
+        if category is None:
+            return Response({
+                'lst': [],
+                'size': 0,
+                'categories': cache.get('categories')
+            })
         items = []
         current_place = page_num * page_size
         end_place = current_place + page_size
@@ -101,12 +111,15 @@ class ShipmentAPI(APIView):
 class ItemImageAPI(APIView):
     @classmethod
     def post(cls, request, num=None):
-        data = request.data['data']
-        if num is None:
-            res = [f"items/{image.image}" for image in Item.objects.get(pk=data).Item_image.all()]
-        else:
-            res = f"items/{Item.objects.get(pk=data).Item_image.all()[num].image}"
-        return Response(res)
+        try:
+            data = request.data['data']
+            if num is None:
+                res = [f"items/{image.image}" for image in Item.objects.get(pk=data).Item_image.all()]
+            else:
+                res = f"items/{Item.objects.get(pk=data).Item_image.all()[num].image}"
+            return Response(res)
+        except Exception as e:
+            return Response('not_found.png') if num is not None else Response(['not_found.png'])
 
 
 class FilterAPI(APIView):
@@ -166,38 +179,44 @@ def all_rating(item_id):
 class CommentsAPI(APIView):
     @classmethod
     def get(cls, request, page_num, page_size, item_id):
-        rating = 0
-        current_place = page_num * page_size
-        end_place = current_place + page_size
+        try:
+            rating = 0
+            current_place = page_num * page_size
+            end_place = current_place + page_size
 
-        comments = CommentSerializer(Item.objects.get(id=item_id).Item_comment.filter()
-                                     [current_place: end_place], many=True).data
-        if Item.objects.get(id=item_id).Item_comment.count() == 0:
-            return Response(
-                {'comments': [],
-                 'rating': 0,
-                 'size': Item.objects.get(id=item_id).Item_comment.count()
-                 }
-            )
-        else:
-            for c in comments:
-                c['user'] = User.objects.get(pk=c['user']).username
+            comments = CommentSerializer(Item.objects.get(id=item_id).Item_comment.filter()
+                                         [current_place: end_place], many=True).data
+            if Item.objects.get(id=item_id).Item_comment.count() == 0:
+                return Response(
+                    {'comments': [],
+                     'rating': 0,
+                     'size': Item.objects.get(id=item_id).Item_comment.count()
+                     }
+                )
+            else:
+                for c in comments:
+                    c['user'] = User.objects.get(pk=c['user']).username
             return Response(
                 {'comments': comments,
                  'rating': all_rating(item_id),
                  'size': Item.objects.get(id=item_id).Item_comment.count()
                  }
             )
+        except Exception as e:
+            return Response({'comments': [],
+                             'rating': 6,
+                             'size': 0
+                             })
 
-
-class AddCommentAPI(APIView):
     @classmethod
     def post(cls, request):
+        c = ''
         data = request.data['data']
         try:
-            Comment(user=Token.objects.get(key=data['Token']).user,
-                    comment_text=data['comment'], rating=data['commentRating'],
-                    item=Item.objects.get(pk=data['item'])).save()
+            c = Comment(user=Token.objects.get(key=data['Token']).user,
+                        comment_text=data['comment'], rating=data['commentRating'],
+                        item=Item.objects.get(pk=data['item']))
+            c.save()
         except Exception as e:
             print(e)
             if str(e) == 'UNIQUE constraint failed: Shipping_app_comment.user_id, Shipping_app_comment.item_id':
@@ -205,8 +224,17 @@ class AddCommentAPI(APIView):
                                  'color': 'red'})
             else:
                 return Response({'msg': str(e),
-                                 'color': 'red'})
-        return Response('')
+                                 'color': 'red'
+                                 })
+        return Response({'id': c.pk,
+                         'item': data['item'],
+                         'rating': all_rating(data['item'])
+                         })
+
+    @classmethod
+    def delete(cls, request, comment_id):
+        Comment.objects.get(id=comment_id).delete()
+        return Response('ok')
 
 
 class HomePageItemsAPI(APIView):
@@ -222,8 +250,11 @@ class HomePageItemsAPI(APIView):
 class WishListAPI(APIView):
     @classmethod
     def get(cls, request, username, item_id):
-        if User.objects.filter(username=username):
-            return Response(bool(WishList.objects.filter(user__username=username, item__id=item_id)))
+        try:
+            if User.objects.filter(username=username):
+                return Response(bool(WishList.objects.filter(user__username=username, item__id=item_id)))
+        except Exception as e:
+            return Response(False)
 
     @classmethod
     def post(cls, request, username, item_id):
@@ -255,4 +286,96 @@ class SearchAPI(APIView):
                 }
             )
         else:
+            return Response()
+
+
+class ProfileAPI(APIView):
+    @classmethod
+    def post(cls, request):
+        data = request.data['data']
+        user = Token.objects.get(key=data['token']).user
+        if data['action'] == 'get':
+            return Response(
+                {
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'email': user.email,
+                    'status': ''
+                }
+            )
+        elif data['action'] == 'set':
+            try:
+                user = Token.objects.get(key=data['token']).user
+                if (user.first_name == data['first_name'] and
+                        user.last_name == data['last_name']
+                        and user.email == data['email']):
+                    raise ValueError('New profile match the old profile')
+                user.first_name = data['first_name']
+                user.last_name = data['last_name']
+                user.email = data['email']
+                user.save()
+                status = 'Profile updated successfully'
+            except Exception as e:
+                status = str(e)
+            return Response({
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'status': status
+            })
+
+
+class PasswordAPI(APIView):
+    @classmethod
+    def post(cls, request):
+        data = request.data['data']
+        status = ''
+        user = Token.objects.get(key=data['token']).user
+        if not user.check_password(data['p2']) and user.check_password(data['p1']):
+            user.set_password(data['p2'])
+            user.save()
+            status = 'Password reset successful'
+        elif not user.check_password(data['p1']):
+            status = 'Old password could not be authenticated'
+        elif user.check_password(data['p2']):
+            status = 'New password matches old password'
+
+        return Response({'status': status})
+
+
+class ShipmentListAPI(APIView):
+    @classmethod
+    def post(cls, request, page_num, page_size):
+        try:
+            current_place = page_num * page_size
+            end_place = current_place + page_size
+            data = request.data['token']
+            user = Token.objects.get(key=data).user
+            user_shipments = ShipmentSerializer(user.User_shipment.filter()[current_place: end_place], many=True).data
+            return Response(
+                {
+                    'lst': user_shipments,
+                    'size': user.User_shipment.count(),
+                }
+            )
+        except Exception as e:
+            return Response([])
+
+
+class ShipmentListItemsAPI(APIView):
+    @classmethod
+    def post(cls, request, page_num, page_size):
+        try:
+            current_place = page_num * page_size
+            end_place = current_place + page_size
+            data = request.data['shipment']
+            items = ItemSerializer([shipment.item for shipment in ShipmentList.objects.filter(
+                shipment=data)[current_place: end_place]], many=True).data
+
+            return Response({
+                    'lst': items,
+                    'size': len(items),
+                })
+
+        except Exception as e:
             return Response()

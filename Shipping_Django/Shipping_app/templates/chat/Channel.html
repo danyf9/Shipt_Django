@@ -1,11 +1,53 @@
 {% extends 'Home.html' %}
 {% block content_block %}
+    <style>
+    .example::-webkit-scrollbar {
+            display: none;
+        }
+    p {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    }
+    .from-me{
+      color: white;
+      background-color: rgb(128, 128, 128, 0.5);
+      overflow-wrap: inherit;
+      word-wrap: inherit;
+      hyphens: inherit;
+      max-width: inherit;
+      white-space: inherit;
+    }
+    .from-them{
+      background-color: rgb(204, 204, 204, 0.5);
+      text-align: right;
+      overflow-wrap: inherit;
+      word-wrap: inherit;
+      hyphens: inherit;
+      max-width: 100%;
+    }
+    .root{
+      color: white;
+      max-width: 100%;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      word-break: break-word;
+      hyphens: auto;
+      white-space:pre-line;
+    }
+    .username{
+      background-color: rgb(204, 204, 204, 0);
+      text-align: right;
+      display: inline;
+      float: right;
+    }
+    </style>
     <script>
       function connect() {
         const urlParams = new URLSearchParams(window.location.search);
         const room = urlParams.get('room')
-        const url = `ws://${window.location.host}/ws?room=${room}&user={{user}}`;
-        document.querySelector('#room').innerHTML = `Welcome to ${room}`
+        const url = `ws://${window.location.host}/ws?room=${room}&user={{user}}&staff=true`;
+        document.querySelector('#room').innerHTML = `Costumer service for user ${room}`
 
         socketClient = new WebSocket(url);
 
@@ -13,22 +55,41 @@
           data = await JSON.parse(e.data);
           rootElem = document.getElementById("root");
           newElem = document.createElement("p");
-          newElem.innerText = data.message;
-        
-          if (data.event_type == "info") {
-            newElem.style.backgroundColor = "yellow";
+          if(data.message.user !== undefined && data.message.message !== undefined && data.message.msg_type !== 'j'){
+          if(data.message.user === '{{user.username}}'){
+            newElem.innerText = `${data.message.user}: ${data.message.message}`;
+            newElem.className = 'from-me'
           }
+          else{
+            newElem.className = 'from-them'
+            if(data.message.msg_type === 'l'){
+              newElem.innerText = `${data.message.message}`
+            }else{
+              if(data.message.msg_type === 'm'){
+              userElem = document.createElement('p')
+              userElem.innerHTML = ' :' + data.message.user
+              userElem.className = 'username'
+              rootElem.appendChild(userElem)}
+              newElem.innerText = `${data.message.message}`;
+            }
+          }
+        
 
           rootElem.appendChild(newElem);
+          // if(data.message.msg_type === 'm' && data.message.user !== '{{user.username}}'){
+          //   rootElem.appendChild(document.createElement('br'))}
           window.scrollTo(0, document.body.scrollHeight);
       }
+    }
         document.getElementById("input").addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
         event.preventDefault();
         document.getElementById("btn").click();
         }
         return;
-    })}
+    })
+    console.log("I couldn't find a solution for this error ")
+  }
 
       function send(data) {
         if(document.querySelector('#input').value !== ''){
@@ -49,10 +110,12 @@
       }
     </script>
   </head>
-  <body onload="connect()" onunload="disconnect()">
+  <body onload="connect()" 
+  onunload="disconnect()">
     <h3 id="room" style="color: white;"></h3>
 
-    <div id="root" style="color: white; margin-bottom: 4rem;"></div>
+    <span id="root" class="root"></span>
+    <div style="margin-top: 1.5rem;"><br/></div>
 
     <input id="input" style="position: fixed; bottom: 0; width: 90%; padding-bottom: 1rem;"/>
     <button onclick="send(document.querySelector('#input').value)" id="btn"

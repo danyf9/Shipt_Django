@@ -14,6 +14,6 @@ urlpatterns = [
     path('edit/<str:kind>/<int:pk>', login_required(views.Edit.as_view()), name='Edit'),
     path('delete/<str:kind>/<int:pk>', login_required(views.Delete.as_view()), name='Delete'),
     path('full/<str:kind>/<int:pk>', login_required(views.Full.as_view()), name='Full'),
-    path('Search/<str:var>', login_required(views.SearchView.as_view()), name='Search'),
+    path('search/<str:var>', login_required(views.SearchView.as_view()), name='Search'),
     path('ws', views.WS.as_view(), name='WS'),
 ]

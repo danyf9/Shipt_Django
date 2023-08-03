@@ -12,17 +12,22 @@ class MyConsumer(WebsocketConsumer):
         pairs = q_params_str.split("&")
         room = None
         user_name = None
+        staff = None
         for p in pairs:
             k_v = p.split("=")
             if k_v[0] == 'room':
                 room = k_v[1]
             if k_v[0] == 'user':
                 user_name = k_v[1]
+            if k_v[0] == 'staff':
+                staff = k_v[1]
 
         room = room if room else "global"
         user_name = user_name if user_name else "anonymous"
+        staff = staff if staff else False
         self.user_name = user_name
         self.group_name = f"room_{room}"
+        self.staff = staff
 
         # accept connection
         self.accept()
@@ -34,26 +39,22 @@ class MyConsumer(WebsocketConsumer):
         async_to_sync(self.channel_layer.group_add)(
             self.group_name,
             self.channel_name)
+        if staff:
+            async_to_sync(self.channel_layer.group_send)(
+                self.group_name, {
+                    'message': {'message': f'Staff {user_name} is here to help',
+                                'user': self.user_name, 'msg_type': 'j'},
+                    'type': 'global_handler',  # this is a function
+                }
+            )
 
-        # let everyone know that a new user entered
-        async_to_sync(self.channel_layer.group_send)(
-            self.group_name, {
-                'type': 'global_handler',  # this is a function
-                'message': f"user {user_name} entered the chat",
-                'event_type': 'info'  # optional extra info
-            }
-        )
 
     def receive(self, text_data):
         text_data = json.loads(text_data)
 
-        # send feedback only to the sender
-        # self.send(text_data=json.dumps({'message': f"new message '{text_data}' received"}))
-
-        # forward message to all
         async_to_sync(self.channel_layer.group_send)(
             self.group_name, {
-                'message': f'{self.user_name}: {text_data["message"]}',
+                'message': {'message': text_data["message"], 'user': self.user_name, 'msg_type': 'm'},
                 'type': 'global_handler',  # this is a function
             }
         )
@@ -65,9 +66,11 @@ class MyConsumer(WebsocketConsumer):
             {'message': event['message']}))
 
     def disconnect(self, code):
+        msg = f'Staff {self.user_name} left the chat' if self.staff else f'Costumer {self.user_name} left the chat'
         async_to_sync(self.channel_layer.group_send)(
             self.group_name, {
-                'message': f'{self.user_name} left the chat',
+                'message': {'message': msg,
+                            'user': self.user_name, 'msg_type': 'l'},
                 'type': 'global_handler',  # this is a function
             }
         )
