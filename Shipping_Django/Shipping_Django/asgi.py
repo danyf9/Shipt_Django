@@ -10,9 +10,7 @@ import os
 
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
-# from channels.auth import AuthMiddlewareStack
 
-# remove 'Shipping_Django.' before launch in ubuntu
 from Shipping_app.ws_routing import websocket_urlpatterns
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Shipping_Django.settings')
@@ -22,5 +20,5 @@ application = ProtocolTypeRouter({
     'websocket':
         URLRouter(
             websocket_urlpatterns)
-
-})
+    }
+)

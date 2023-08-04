@@ -11,9 +11,8 @@ from Shipping_app.models import Categories
 from django.contrib.auth.models import User, Group
 from rest_framework.authtoken.models import Token
 
-# change to 'python3' before launch in ubuntu
-os.system('python.exe ./manage.py makemigrations')
-os.system('python.exe ./manage.py migrate')
+os.system('python3 ./manage.py makemigrations')
+os.system('python3 ./manage.py migrate')
 try:
     user = User.objects.create_user(username='Admin', password='123').save()
     token = Token.objects.create(user=user)
