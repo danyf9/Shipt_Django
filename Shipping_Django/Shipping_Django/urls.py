@@ -22,4 +22,5 @@ urlpatterns = [
     path('Shipt/', include('Shipping_app.urls')),
     path('API/', include('Shipping_app.API.api_urls')),
     path('Shipt', RedirectView.as_view(url='Shipt/home')),
+    path('Shipt/', RedirectView.as_view(url='Shipt/home'))
 ]

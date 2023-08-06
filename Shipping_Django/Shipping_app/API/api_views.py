@@ -194,6 +194,7 @@ class CommentsAPI(APIView):
                     {'comments': [],
                      'rating': 0,
                      'size': Item.objects.get(id=item_id).Item_comment.count(),
+                     'can_comment': can_comment
                      }
                 )
             else:
