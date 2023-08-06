@@ -54,6 +54,7 @@ class ItemAPI(APIView):
             return Response({'error': f"Error: {e}"})
 
 
+@method_decorator(cache_page(60*60), name='dispatch')
 class ItemListAPI(APIView):
     @classmethod
     def get(cls, request, page_num, page_size, category=None):
@@ -178,7 +179,7 @@ def all_rating(item_id):
 
 class CommentsAPI(APIView):
     @classmethod
-    def get(cls, request, page_num, page_size, item_id):
+    def get(cls, request, page_num, page_size, item_id, username=None):
         try:
             rating = 0
             current_place = page_num * page_size
@@ -186,11 +187,13 @@ class CommentsAPI(APIView):
 
             comments = CommentSerializer(Item.objects.get(id=item_id).Item_comment.filter()
                                          [current_place: end_place], many=True).data
+            can_comment = not Item.objects.get(id=item_id).Item_comment.filter(
+                Q(user__username=username))
             if Item.objects.get(id=item_id).Item_comment.count() == 0:
                 return Response(
                     {'comments': [],
                      'rating': 0,
-                     'size': Item.objects.get(id=item_id).Item_comment.count()
+                     'size': Item.objects.get(id=item_id).Item_comment.count(),
                      }
                 )
             else:
@@ -199,7 +202,8 @@ class CommentsAPI(APIView):
             return Response(
                 {'comments': comments,
                  'rating': all_rating(item_id),
-                 'size': Item.objects.get(id=item_id).Item_comment.count()
+                 'size': Item.objects.get(id=item_id).Item_comment.count(),
+                 'can_comment': can_comment
                  }
             )
         except Exception as e:
@@ -373,9 +377,9 @@ class ShipmentListItemsAPI(APIView):
                 shipment=data)[current_place: end_place]], many=True).data
 
             return Response({
-                    'lst': items,
-                    'size': len(items),
-                })
+                'lst': items,
+                'size': len(items),
+            })
 
         except Exception as e:
             return Response()

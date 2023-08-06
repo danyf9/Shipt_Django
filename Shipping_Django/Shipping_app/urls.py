@@ -6,7 +6,6 @@ urlpatterns = [
 
     path('home', login_required(views.Home.as_view()), name='Home'),
     path('login', LoginView.as_view(), name='Login'),
-    path('Signup', views.SignupView.as_view(), name='Signup'),
     path('logout', LogoutView.as_view(), name='Logout'),
     path('list/<str:kind>', login_required(views.List.as_view()), name='List'),
     path('list/<str:kind>/<str:category>', login_required(views.List.as_view()), name='CategoryList'),

@@ -14,7 +14,8 @@ from rest_framework.authtoken.models import Token
 os.system('python3 ./manage.py makemigrations')
 os.system('python3 ./manage.py migrate')
 try:
-    user = User.objects.create_user(username='Admin', password='123').save()
+    user = User.objects.create_user(username='Admin', password='123', is_staff=True)
+    user.save()
     token = Token.objects.create(user=user)
     Group(name='User_permission').save()
     Group(name='Edit_permission').save()

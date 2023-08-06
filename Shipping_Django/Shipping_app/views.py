@@ -299,7 +299,8 @@ class Edit(View):
     @classmethod
     def get(cls, request, kind, pk):
         forms = ''
-        permission = permissions(request.user, kind, 'Add')
+        permission = permissions(request.user, kind, 'Edit') if kind != 'User' \
+            else (permissions(request.user, kind, 'Edit') and request.user.pk != pk)
 
         if not permission:
             return render(request=request, template_name='Modal.html',
@@ -328,7 +329,8 @@ class Edit(View):
     def post(cls, request, kind, pk):
         form = msg = status = ''
         direct = 'List'
-        permission = permissions(request.user, kind, 'Add')
+        permission = permissions(request.user, kind, 'Edit') if kind != 'User' \
+            else (permissions(request.user, kind, 'Edit') and request.user.pk != pk)
 
         if not permission:
             return render(request=request, template_name='Modal.html',
@@ -400,12 +402,14 @@ class Delete(View):
     @classmethod
     def get(cls, request, kind, pk):
         obj = ''
-        permission = permissions(request.user, kind, 'Add')
+        permission = permissions(request.user, kind, 'Delete') if kind != 'User' \
+            else (permissions(request.user, kind, 'Delete') and request.user.pk != pk)
 
         if not permission:
             return render(request=request, template_name='Modal.html',
                           context={'direct': 'Home', 'kind': 'Profile', 'msg': 'permission denied',
                                    'status': 'Permission denied'})
+
         if kind == 'Item':
             obj = Item.objects.get(pk=pk)
             s3_delete(obj.Item_image.all())
@@ -423,33 +427,6 @@ class Delete(View):
             return redirect('Full', kind='Item', pk=pk)
         obj.delete()
         return redirect('List', kind=kind)
-
-
-class SignupView(View):
-
-    @classmethod
-    def get(cls, request):
-        return render(request=request, template_name='registration/login.html',
-                      context={'form': FullSignup, 'action': 'Signup'})
-
-    @classmethod
-    def post(cls, request):
-        user = FullSignup(data=request.POST)
-        if user.is_valid():
-            try:
-                user.save()
-                login(request=request, user=user.instance)
-                status = 'Success'
-                msg = ''
-            except Exception as e:
-                status = 'Error'
-                msg = str(e)
-            return render(request=request, template_name='Modal.html',
-                          context={'direct': 'Home', 'kind': 'User', 'msg': msg,
-                                   'status': status})
-        else:
-            return render(request=request, template_name='registration/login.html',
-                          context={'form': user, 'action': 'Signup', 'user': user.instance.username})
 
 
 class WS(View):
