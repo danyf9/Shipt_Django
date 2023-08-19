@@ -15,7 +15,6 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
@@ -26,7 +25,6 @@ SECRET_KEY = os.environ.get('DJANGO_KEY')
 DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1', f"{os.environ.get('HOST')}"]
-
 
 # Application definition
 
@@ -88,24 +86,27 @@ CHANNEL_LAYERS = {
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'prj_db',
-        'USER': 'postgres',
-        'PASSWORD': os.environ.get('POSTGRES_KEY'),
-        'HOST': 'database-1.cin4tpxrmmsd.eu-central-1.rds.amazonaws.com',
-        'PORT': '5432',
+if os.environ.get('HOST') != '127.0.0.1':
+    try:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': 'prj_db',
+                'USER': 'postgres',
+                'PASSWORD': os.environ.get('POSTGRES_KEY'),
+                'HOST': os.environ.get('DB'),
+                'PORT': '5432',
+            }
+        }
+    except Exception as e:
+        print(e)
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -137,7 +138,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
@@ -155,7 +155,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {"DEFAULT_AUTHENTICATION_CLASSES": [
     'rest_framework.authentication.TokenAuthentication',
-    ]
+]
 }
 
 CORS_ALLOWED_ORIGINS = [
@@ -166,7 +166,6 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_HEADERS = [
     "Content-Type",
 ]
-
 
 CACHES = {
     "default": {

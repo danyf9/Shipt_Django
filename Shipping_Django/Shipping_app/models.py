@@ -1,14 +1,9 @@
-from time import time
-
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.contrib.auth.models import User
+from .functions import auto_id
 
 # Create your models here.
-
-
-def auto_id():
-    return int(time())
 
 
 class Item(models.Model):

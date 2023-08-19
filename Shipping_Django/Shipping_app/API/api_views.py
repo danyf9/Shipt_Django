@@ -8,10 +8,13 @@ from ..models import Item, Categories, Shipment, ShipmentList, Comment, WishList
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from django.utils.decorators import method_decorator
+from ..functions import all_rating
 
 
 class UserCreation(APIView):
-
+    """
+    API user creation
+    """
     @classmethod
     def post(cls, request):
         try:
@@ -34,6 +37,9 @@ class UserCreation(APIView):
 
 
 class GetUserWithToken(APIView):
+    """
+    API - get username with token
+    """
     @classmethod
     def post(cls, request):
         return Response(
@@ -42,20 +48,23 @@ class GetUserWithToken(APIView):
 
 
 class ItemAPI(APIView):
+    """
+    item data API
+    """
     @classmethod
     def get(cls, request):
         try:
             item_id = request.query_params.get('item_id')
-            if item_id is None:
-                return Response(ItemSerializer(Item.objects.all(), many=True).data)
-            else:
-                return Response(ItemSerializer(Item.objects.get(pk=item_id)).data)
+            return Response(ItemSerializer(Item.objects.get(pk=item_id)).data)
         except Exception as e:
             return Response({'error': f"Error: {e}"})
 
 
 @method_decorator(cache_page(60*60), name='dispatch')
 class ItemListAPI(APIView):
+    """
+    API item pagination
+    """
     @classmethod
     def get(cls, request, page_num, page_size, category=None):
         if category is None:
@@ -88,6 +97,9 @@ class ItemListAPI(APIView):
 
 
 class ResetCache(APIView):
+    """
+    reset cache API
+    """
     @classmethod
     def get(cls, request):
         try:
@@ -99,6 +111,9 @@ class ResetCache(APIView):
 
 
 class ShipmentAPI(APIView):
+    """
+    payment API
+    """
     @classmethod
     def post(cls, request):
         data = request.data['data']
@@ -110,6 +125,9 @@ class ShipmentAPI(APIView):
 
 
 class ItemImageAPI(APIView):
+    """
+    item image API with item id
+    """
     @classmethod
     def post(cls, request, num=None):
         try:
@@ -124,6 +142,9 @@ class ItemImageAPI(APIView):
 
 
 class FilterAPI(APIView):
+    """
+    item filter API with price, category and name
+    """
     @classmethod
     def post(cls, request, page_num, page_size):
         data = request.data['filters']
@@ -169,15 +190,10 @@ class FilterAPI(APIView):
         )
 
 
-def all_rating(item_id):
-    rating = 0
-    lst = Item.objects.get(id=item_id).Item_comment.filter()
-    for i in lst:
-        rating += i.rating
-    return rating / len(lst)
-
-
 class CommentsAPI(APIView):
+    """
+    get and add comments by item API
+    """
     @classmethod
     def get(cls, request, page_num, page_size, item_id, username=None):
         try:
@@ -243,6 +259,9 @@ class CommentsAPI(APIView):
 
 
 class HomePageItemsAPI(APIView):
+    """
+    get homepage items API
+    """
     @classmethod
     def get(cls, request):
         try:
@@ -253,6 +272,9 @@ class HomePageItemsAPI(APIView):
 
 
 class WishListAPI(APIView):
+    """
+    wish list API
+    """
     @classmethod
     def get(cls, request, username, item_id):
         try:
@@ -273,6 +295,9 @@ class WishListAPI(APIView):
 
 
 class SearchAPI(APIView):
+    """
+    search item by name API
+    """
     @classmethod
     def post(cls, request, page_num, page_size):
         data = request.data['param']
@@ -295,6 +320,9 @@ class SearchAPI(APIView):
 
 
 class ProfileAPI(APIView):
+    """
+    get and update user profile API
+    """
     @classmethod
     def post(cls, request):
         data = request.data['data']
@@ -331,6 +359,9 @@ class ProfileAPI(APIView):
 
 
 class PasswordAPI(APIView):
+    """
+    update password API
+    """
     @classmethod
     def post(cls, request):
         data = request.data['data']
@@ -349,6 +380,9 @@ class PasswordAPI(APIView):
 
 
 class ShipmentListAPI(APIView):
+    """
+    shipment list pagination API
+    """
     @classmethod
     def post(cls, request, page_num, page_size):
         try:
@@ -368,6 +402,9 @@ class ShipmentListAPI(APIView):
 
 
 class ShipmentListItemsAPI(APIView):
+    """
+    get item list pagination by shipment API
+    """
     @classmethod
     def post(cls, request, page_num, page_size):
         try:
