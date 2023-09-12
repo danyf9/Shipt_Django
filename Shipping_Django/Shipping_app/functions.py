@@ -4,7 +4,7 @@ import string
 import boto3
 from django.db.models import Q
 from botocore.config import Config
-from .models import Item, Shipment, Categories, Image
+from . import models
 from django.contrib.auth.models import User, Group
 from time import time
 
@@ -17,7 +17,7 @@ def search_all(var, request):
     group = groups(request.user)
     if group['View_permission']:
         if group['Item_permission']:
-            item_list = Item.objects.filter(
+            item_list = models.Item.objects.filter(
                 Q(id__contains=var) |
                 Q(name__contains=var) |
                 Q(description__contains=var) |
@@ -26,7 +26,7 @@ def search_all(var, request):
         else:
             item_list = {}
         if group['Shipment_permission']:
-            shipment_list = Shipment.objects.filter(
+            shipment_list = models.Shipment.objects.filter(
                 Q(id__contains=var) |
                 Q(user__username__contains=var) |
                 Q(order_date__contains=var)
@@ -49,11 +49,11 @@ def search_all(var, request):
 
 def get_items(category):
     obj_lst = {}
-    for c in list(zip(*Categories.categories))[0]:
-        if c == {lst[1]: lst[0] for lst in Categories.categories}[category]:
+    for c in list(zip(*models.Categories.categories))[0]:
+        if c == {lst[1]: lst[0] for lst in models.Categories.categories}[category]:
             obj_lst.update(
-                {c: [obj.item for obj in Categories.objects.filter(category=c)]})
-    return obj_lst[{lst[1]: lst[0] for lst in Categories.categories}[category]]
+                {c: [obj.item for obj in models.Categories.objects.filter(category=c)]})
+    return obj_lst[{lst[1]: lst[0] for lst in models.Categories.categories}[category]]
 
 
 def groups(user):
@@ -74,7 +74,7 @@ def s3_url():
     rand_id = "".join(
         random.SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in
         range(20))
-    Image(image=f"{rand_id}.png", status='W').save()
+    models.Image(image=f"{rand_id}.png", status='W').save()
     return {'url': s3_client.generate_presigned_url(
         ClientMethod='put_object',
         Params={
@@ -95,7 +95,7 @@ def s3_delete(img_list):
 
 def all_rating(item_id):
     rating = 0
-    lst = Item.objects.get(id=item_id).Item_comment.filter()
+    lst = models.Item.objects.get(id=item_id).Item_comment.filter()
     for i in lst:
         rating += i.rating
     return rating / len(lst)

@@ -16,13 +16,13 @@
     <a href="{% url 'Delete' kind='Category' pk=item.pk%}">(remove)</a>
     {% endfor %}
     {% else %}
-    {% if key != 'Picture' and key != 'sitems' %}
+    {% if key != 'Picture' and key != 'shipment_items' %}
     <p style="color:white; margin-right: 0rem;">{{key}} : {{value}}</p>
     {% else %}
     {% if key == 'shipment_items' %}
     <h5 style="color: white;"> Item list: </h5>
     <ol style="list-style-position: inside; padding-right: 30px;">
-    {% for item in obj_dict.sitems %}
+    {% for item in obj_dict.shipment_items %}
         <li style="color: white;border-bottom:1px solid gray;">
             {{item}}
             <a href="{% url 'Full' kind='Item' pk=item.pk %}" style="float: right; margin-left: 15px; margin-right: 10px;">full details</a>

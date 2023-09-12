@@ -86,6 +86,7 @@ CHANNEL_LAYERS = {
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+# for local database set the 'HOST' environment variable to '127.0.0.1'
 if os.environ.get('HOST') != '127.0.0.1':
     try:
         DATABASES = {

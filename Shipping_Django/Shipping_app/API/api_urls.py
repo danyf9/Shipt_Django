@@ -25,7 +25,7 @@ urlpatterns = [
     path('reset', api_views.ResetCache.as_view()),
     path("image", api_views.ItemImageAPI.as_view()),
     path("image/<int:num>", api_views.ItemImageAPI.as_view()),
-    path("WL/<str:username>/<int:item_id>", api_views.WishListAPI.as_view()),
+    path("WL/<str:token>/<int:item_id>", api_views.WishListAPI.as_view()),
     path("shipments/<int:page_num>/<int:page_size>", api_views.ShipmentListAPI.as_view()),
     path("shipments-items/<int:page_num>/<int:page_size>", api_views.ShipmentListItemsAPI.as_view()),
 ]

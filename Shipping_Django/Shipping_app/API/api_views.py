@@ -273,12 +273,13 @@ class HomePageItemsAPI(APIView):
 
 class WishListAPI(APIView):
     """
-    wish list API
+    wishlist API
     """
     @classmethod
-    def get(cls, request, username, item_id):
+    def get(cls, request, token, item_id):
         try:
-            if User.objects.filter(username=username):
+            username = Token.objects.get(key=token).user.username
+            if username:
                 return Response(bool(WishList.objects.filter(user__username=username, item__id=item_id)))
         except Exception as e:
             return Response(False)
