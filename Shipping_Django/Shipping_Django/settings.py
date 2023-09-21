@@ -149,11 +149,6 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# USE_L10N = False
-# DATE_FORMAT = 'd ,F, Y'
-# SESSION_COOKIE_AGE = 60
-# in seconds
-
 REST_FRAMEWORK = {"DEFAULT_AUTHENTICATION_CLASSES": [
     'rest_framework.authentication.TokenAuthentication',
 ]
@@ -179,5 +174,4 @@ LOGIN_REDIRECT_URL = 'Home'
 LOGOUT_REDIRECT_URL = 'Login'
 LOGIN_URL = 'Login'
 
-# CRISPY_TEMPLATE_PACK = 'uni_form'
 CRISPY_TEMPLATE_PACK = "bootstrap5"
