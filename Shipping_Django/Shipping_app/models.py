@@ -1,7 +1,7 @@
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.contrib.auth.models import User
-from .functions import auto_id
+from .functions import auto_id, user_text
 
 # Create your models here.
 
@@ -90,3 +90,7 @@ class WishList(models.Model):
 
     class Meta:
         unique_together = ('user', 'item')
+
+
+User.add_to_class('__str__', user_text)
+

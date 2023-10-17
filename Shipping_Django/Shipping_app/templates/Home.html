@@ -110,7 +110,8 @@
           </a>
           <ul class="dropdown-menu">
             {% if groups.View_permission %}
-            <li><a class="dropdown-item" href="{% url 'List' kind='User' %}">All users</a></li>
+            <li><a class="dropdown-item" href="{% url 'List' kind='Staff' %}">Staff</a></li>
+            <li><a class="dropdown-item" href="{% url 'List' kind='Users' %}">All users</a></li>
             {% endif %}
             {% if groups.Add_permission %}
             <li><a class="dropdown-item" href="{% url 'Add' kind='User' %}">Create new user</a></li>

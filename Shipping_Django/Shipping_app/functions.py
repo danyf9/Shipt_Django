@@ -4,6 +4,8 @@ import string
 import boto3
 from django.db.models import Q
 from botocore.config import Config
+from django.http import HttpResponse
+
 from . import models
 from django.contrib.auth.models import User, Group
 from time import time
@@ -99,3 +101,11 @@ def all_rating(item_id):
     for i in lst:
         rating += i.rating
     return rating / len(lst)
+
+
+def user_text(self):
+    return f'{self.username}{" (staff)" if self.is_staff else ""}'
+
+
+def not_found():
+    return HttpResponse('404 page not found <br> <a href="/Shipt">home<a/>')

@@ -7,7 +7,7 @@ from channels.layers import get_channel_layer
 from .models import Item, Shipment, Categories, Image
 from .forms import Search, ItemForm, EditShipment, \
     FullSignup, ItemCategoryForm, ImageForm, EditUserForm, GroupsForm
-from .functions import search_all, get_items, groups, permissions, s3_url, s3_delete
+from .functions import search_all, get_items, groups, permissions, s3_url, s3_delete, not_found
 
 
 class Home(View):
@@ -61,8 +61,13 @@ class List(View):
         elif kind == 'Room':
             obj_lst = [k.split('_')[1] for k in list(get_channel_layer().groups.keys())]
 
+        elif kind == 'Staff':
+            obj_lst = User.objects.filter(is_staff=True)
+
         elif kind == 'User':
-            obj_lst = User.objects.all()
+            obj_lst = User.objects.filter(is_staff=False)
+        else:
+            not_found()
 
         return render(request=request, template_name='List.html',
                       context={'obj_list': obj_lst,
@@ -103,6 +108,8 @@ class Add(View):
             forms = [ImageForm(item=True, img_name=img_name)]
         elif kind == 'User':
             forms = [FullSignup, GroupsForm]
+        else:
+            not_found()
 
         return render(request=request, template_name='Form.html',
                       context={'kind': kind, 'action': 'Add', 'forms': forms,
@@ -212,6 +219,8 @@ class Full(View):
         elif kind == 'Profile' or 'User':
             obj = User.objects.get(pk=pk)
             obj_dict = {'Username': obj.username, 'Full Name': obj.get_full_name(), 'email': obj.email}
+        else:
+            not_found()
 
         return render(request=request, template_name='Full_details.html',
                       context={'obj_dict': obj_dict, 'groups': groups(request.user), 'kind': kind})
@@ -250,6 +259,8 @@ class Edit(View):
         elif kind == 'User':
             forms = [EditUserForm(instance=User.objects.get(pk=pk), kind=kind),
                      GroupsForm(groups=groups(User.objects.get(pk=pk)))]
+        else:
+            not_found()
         return render(request=request, template_name='Form.html',
                       context={'forms': forms, 'kind': kind, 'pk': pk, 'action': 'Edit',
                                'permission': permission, 'groups': groups(request.user)})
