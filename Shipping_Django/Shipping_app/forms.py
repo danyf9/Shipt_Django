@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Item, Shipment, Categories, Image, auto_id
+from .models import Item, Shipment, Categories, CategoryOptions, Image, auto_id
 
 
 class Search(forms.Form):
@@ -10,7 +10,7 @@ class Search(forms.Form):
 
 
 class ItemForm(forms.ModelForm):
-    category = forms.ChoiceField(choices=Categories.categories)
+    category = forms.ModelChoiceField(queryset=CategoryOptions.objects.all())
     id = forms.IntegerField(disabled=True)
 
     def __init__(self, *args, action, **kwargs):

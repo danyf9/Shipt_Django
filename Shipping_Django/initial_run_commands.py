@@ -6,10 +6,9 @@ import django
 
 django.setup()
 
-from django.core.cache import cache
-from Shipping_app.models import Categories
 from django.contrib.auth.models import User, Group
 from rest_framework.authtoken.models import Token
+from Shipping_app.models import CategoryOptions
 
 os.system('python3 ./manage.py makemigrations')
 os.system('python3 ./manage.py migrate')
@@ -34,5 +33,7 @@ try:
             pass
 except Exception as e:
     print(e)
-cache.set('category_CAT_dict', {c[1]: c[0] for c in Categories.categories}, timeout=None)
-cache.set('categories', [c[1] for c in Categories.categories], timeout=None)
+
+basic_categories = ['Technology', 'Toys', 'Clothes', 'Men Clothes', 'Women Clothes', 'Gaming']
+for category in basic_categories:
+    CategoryOptions(category=category).save()

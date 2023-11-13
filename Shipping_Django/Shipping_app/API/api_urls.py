@@ -1,9 +1,6 @@
 from django.urls import path
 from rest_framework.authtoken.views import obtain_auth_token
 from . import api_views
-from django.conf import settings
-from django.conf.urls.static import static
-from django.views.decorators.cache import cache_page
 
 urlpatterns = [
     path("item", api_views.ItemAPI.as_view(http_method_names=['get'])),

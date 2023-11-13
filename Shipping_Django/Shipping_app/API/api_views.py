@@ -3,8 +3,8 @@ from django.db.models import Q
 from django.views.decorators.cache import cache_page
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import ItemSerializer, CommentSerializer, ShipmentSerializer
-from ..models import Item, Categories, Shipment, ShipmentList, Comment, WishList
+from .serializers import ItemSerializer, CommentSerializer, ShipmentSerializer, CategoryOptionsSerializer
+from ..models import Item, Categories , CategoryOptions, Shipment, ShipmentList, Comment, WishList
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from django.utils.decorators import method_decorator
@@ -71,14 +71,15 @@ class ItemListAPI(APIView):
             return Response({
                 'lst': [],
                 'size': 0,
-                'categories': cache.get('categories')
+                'categories': [c['category'] for c in
+                               CategoryOptionsSerializer(CategoryOptions.objects.all(), many=True).data]
             })
         items = []
         current_place = page_num * page_size
         end_place = current_place + page_size
         if category is not None and category != 'All':
-            items = [category.item for category in Categories.objects.filter(
-                category=cache.get('category_CAT_dict')[category])]
+            items = [category.item for category in
+                     Categories.objects.filter(category=CategoryOptions.objects.get(category=category))]
         else:
             items = Item.objects.filter()[current_place: end_place]
 
@@ -91,7 +92,8 @@ class ItemListAPI(APIView):
             {
                 'lst': items,
                 'size': len(items),
-                'categories': cache.get('categories')
+                'categories': [c['category'] for c in
+                               CategoryOptionsSerializer(CategoryOptions.objects.all(), many=True).data]
             }
         )
 
@@ -152,7 +154,8 @@ class FilterAPI(APIView):
             return Response({
                 'lst': [],
                 'size': 0,
-                'categories': cache.get('categories')
+                'categories': [c['category'] for c in
+                               CategoryOptionsSerializer(CategoryOptions.objects.all(), many=True).data]
             })
         res = Categories.objects.none()
         current_place = page_num * page_size
@@ -161,7 +164,7 @@ class FilterAPI(APIView):
         if len(data['category']) != 0:
             for c in data['category']:
                 res = res | Categories.objects.filter(
-                    category=cache.get('category_CAT_dict')[c]
+                    category=CategoryOptions.objects.get(category=c)
                 )
         else:
             res = Categories.objects.filter()
@@ -185,7 +188,8 @@ class FilterAPI(APIView):
             {
                 'lst': items,
                 'size': len(items),
-                'categories': cache.get('categories')
+                'categories': [c['category'] for c in
+                               CategoryOptionsSerializer(CategoryOptions.objects.all(), many=True).data]
             }
         )
 

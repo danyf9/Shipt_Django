@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Item, Comment, Shipment
+from ..models import Item, Comment, Shipment, CategoryOptions
 
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -21,3 +21,10 @@ class ShipmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shipment
         fields = ['id', 'order_date']
+
+
+class CategoryOptionsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CategoryOptions
+        fields = ['category']

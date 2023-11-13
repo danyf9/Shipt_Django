@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True if os.environ.get('HOST') == '127.0.0.1' else False
 
 ALLOWED_HOSTS = ['127.0.0.1', f"{os.environ.get('HOST')}"]
 
@@ -155,7 +155,6 @@ REST_FRAMEWORK = {"DEFAULT_AUTHENTICATION_CLASSES": [
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:5500",
     "http://localhost:3000",
 ]
 

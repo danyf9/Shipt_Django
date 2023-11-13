@@ -50,13 +50,7 @@ def search_all(var, request):
 
 
 def get_items(category):
-    obj_lst = {}
-    for c in list(zip(*models.Categories.categories))[0]:
-        if c == {lst[1]: lst[0] for lst in models.Categories.categories}[category]:
-            obj_lst.update(
-                {c: [obj.item for obj in models.Categories.objects.filter(category=c)]})
-    return obj_lst[{lst[1]: lst[0] for lst in models.Categories.categories}[category]]
-
+    return [c.item for c in models.CategoryOptions.objects.get(category=category).Category.all()]
 
 def groups(user):
     return {group.name: (group in user.groups.all()) for group in Group.objects.all()}

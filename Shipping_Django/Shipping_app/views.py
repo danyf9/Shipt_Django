@@ -4,7 +4,7 @@ from django.contrib.auth.models import User, Group
 from django.shortcuts import render, redirect
 from django.views import View
 from channels.layers import get_channel_layer
-from .models import Item, Shipment, Categories, Image
+from .models import Item, Shipment, Categories, CategoryOptions, Image
 from .forms import Search, ItemForm, EditShipment, \
     FullSignup, ItemCategoryForm, ImageForm, EditUserForm, GroupsForm
 from .functions import search_all, get_items, groups, permissions, s3_url, s3_delete, not_found
@@ -53,7 +53,7 @@ class List(View):
 
         elif kind == 'Category':
             if category is None:
-                obj_lst = [o for o in Categories.categories]
+                obj_lst = CategoryOptions.objects.all()
             else:
                 obj_lst = get_items(category)
                 kind = 'Item'
@@ -197,7 +197,7 @@ class Full(View):
             obj = Item.objects.get(pk=pk)
             l1 = []
             for q in [c.category for c in obj.Item_category.all()]:
-                l1.append({'category': {c[0]: c[1] for c in Categories.categories}[q],
+                l1.append({'category': q,
                            'pk': Categories.objects.get(item=obj, category=q).pk})
 
             obj_dict = {'ID': obj.pk, 'Name': obj.name, 'Description': obj.description,

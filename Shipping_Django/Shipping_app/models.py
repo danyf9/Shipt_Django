@@ -45,17 +45,15 @@ class ShipmentList(models.Model):
         return f'{self.shipment}->{self.item}'
 
 
+class CategoryOptions(models.Model):
+    category = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.category
+
+
 class Categories(models.Model):
-
-    categories = [('TECH', 'Technology'),
-                  ('TOY', 'Toys'),
-                  ('CLOTH', 'Clothes'),
-                  ('MCLOTH', 'Men Clothes'),
-                  ('FCLOTH', 'Women Clothes'),
-                  ('GAME', 'Gaming'),
-                  ]
-
-    category = models.CharField(max_length=50, choices=categories)
+    category = models.ForeignKey(to=CategoryOptions, related_name='Category', on_delete=models.CASCADE)
     item = models.ForeignKey(to=Item, related_name='Item_category', on_delete=models.CASCADE)
 
     class Meta:
